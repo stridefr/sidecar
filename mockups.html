@@ -1,0 +1,1058 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sidecar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400..700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root{
+  --bg:#0B0D14; --card:#12151F;
+  --glass:rgba(24,27,38,.62); --glass-lo:rgba(18,21,31,.55);
+  --hair:rgba(255,255,255,.09); --hair2:rgba(255,255,255,.05);
+  --fg:#E8E6E3; --dim:#A5A9BC; --mute:#767B90; --faint:#565C71;
+
+  /* ── action: yours. only on things you do ── */
+  --acc:#D97757; --acc-soft:rgba(217,119,87,.16); --acc-line:rgba(217,119,87,.42);
+
+  /* ── semantic: session state. warm/cool/neutral, never decorative ── */
+  --run:#E0A34E; --wait:#5FCFA0; --idle:#5A6076;
+
+  /* ── diff ── */
+  --add:#5FCFA0; --del:#E0666B;
+
+  /* ── identity: per-project hues, deliberately a cool family
+        so they can never be mistaken for state or for action ── */
+  --hue-violet:#8B7FE8; --hue-cyan:#4FB3D9; --hue-magenta:#D07BC8;
+  --hue:var(--hue-violet);
+
+  --ui:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --serif:"Instrument Serif",Georgia,serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased}
+body{background:var(--bg);color:var(--fg);font-family:var(--ui);font-size:15px;line-height:1.55;
+  padding-bottom:110px}
+:focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:4px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+.sheet{max-width:1180px;margin:0 auto;padding:0 40px}
+
+/* ── masthead ── */
+.masthead{padding:88px 0 22px;border-bottom:1px solid var(--hair)}
+.eyebrow{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--acc)}
+.masthead h1{font-family:var(--serif);font-weight:400;font-size:clamp(46px,6.4vw,80px);
+  line-height:.96;letter-spacing:-.02em;margin:18px 0 0;text-wrap:balance}
+.masthead h1 em{font-style:italic;color:var(--mute)}
+.standfirst{max-width:62ch;margin-top:22px;color:var(--dim);font-size:17px;line-height:1.65}
+.facts{display:flex;flex-wrap:wrap;gap:10px 26px;margin-top:30px;padding-bottom:28px;
+  font-family:var(--mono);font-size:11.5px;color:var(--faint)}
+.facts b{color:var(--mute);font-weight:500}
+
+/* ── blocks ── */
+.block{padding:74px 0 0}
+.bhead{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:56px;align-items:end;margin-bottom:26px}
+@media(max-width:900px){.bhead{grid-template-columns:1fr;gap:16px}}
+.bnum{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--faint);display:block;margin-bottom:12px}
+.bhead h2{font-family:var(--serif);font-weight:400;font-size:34px;line-height:1.1;
+  letter-spacing:-.01em;text-wrap:balance}
+.bnote{font-family:var(--serif);font-style:italic;font-size:17px;line-height:1.5;color:var(--mute);
+  border-left:1px solid var(--acc-line);padding-left:18px}
+
+.notes{margin-top:26px;display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));
+  gap:1px;background:var(--hair2);border:1px solid var(--hair2);border-radius:11px;overflow:hidden}
+.note{background:var(--card);padding:16px 17px}
+.note h4{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--acc);margin-bottom:8px;font-weight:500}
+.note p{font-size:13.5px;line-height:1.55;color:var(--mute)}
+code{font-family:var(--mono);font-size:12px;color:var(--dim);background:rgba(255,255,255,.05);
+  padding:1px 4px;border-radius:3px}
+.legend{display:flex;flex-wrap:wrap;gap:9px 20px;margin-top:20px;padding:14px 16px;
+  border:1px solid var(--hair2);border-radius:11px;background:var(--card)}
+.legend .li{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--mute)}
+
+.foot{margin-top:88px;padding-top:26px;border-top:1px solid var(--hair);
+  font-family:var(--mono);font-size:11px;color:var(--faint);line-height:1.7}
+.foot b{color:var(--mute);font-weight:500}
+.foot p + p{margin-top:12px}
+
+/* ── desk backdrop ── */
+.desk{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--hair);
+  min-height:250px;display:grid;place-items:center;padding:56px 34px;
+  background:
+    radial-gradient(120% 90% at 12% 8%,#2A2340 0%,transparent 55%),
+    radial-gradient(90% 80% at 88% 92%,#1B3340 0%,transparent 58%),
+    radial-gradient(70% 70% at 60% 20%,#3A2A2A 0%,transparent 60%),#0E1018}
+.desk::before{content:"";position:absolute;inset:0;opacity:.5;
+  background-image:repeating-linear-gradient(180deg,transparent 0 12px,rgba(255,255,255,.035) 12px 13px,transparent 13px 26px);
+  mask-image:linear-gradient(105deg,#000 0 42%,transparent 78%)}
+.desk::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:radial-gradient(rgba(255,255,255,.045) .5px,transparent .5px);background-size:3px 3px}
+.desk > *{position:relative;z-index:1;width:100%;display:flex;justify-content:center}
+.desk.tall{min-height:620px}
+.desk.mid{min-height:360px}
+
+.win{background:var(--glass);backdrop-filter:blur(26px) saturate(165%);
+  -webkit-backdrop-filter:blur(26px) saturate(165%);border:1px solid var(--hair);
+  border-radius:15px;color:var(--fg);
+  box-shadow:0 1px 0 rgba(255,255,255,.07) inset,0 28px 70px -18px rgba(0,0,0,.72),0 4px 14px rgba(0,0,0,.4)}
+
+.kbd{font-family:var(--mono);font-size:10.5px;color:var(--faint);border:1px solid var(--hair);
+  border-bottom-width:2px;border-radius:5px;padding:3px 6px;background:rgba(255,255,255,.03);
+  white-space:nowrap}
+.caret{display:inline-block;width:2px;height:18px;background:var(--acc);vertical-align:-3px;
+  animation:blink 1.1s steps(1,end) infinite}
+@keyframes blink{50%{opacity:0}}
+@keyframes breathe{0%,100%{opacity:.33}50%{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes wav{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
+@keyframes ping{0%{transform:scale(1);opacity:.55}70%,100%{transform:scale(2.4);opacity:0}}
+
+/* ══════════ marquee ══════════ */
+.marq{display:block;overflow:hidden;white-space:nowrap;min-width:0}
+.marq-track{display:block;min-width:0}
+.marq-i{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.marq-i.dup{display:none}
+.marq.is-over.go{
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 14px,#000 calc(100% - 14px),transparent 100%);
+  mask-image:linear-gradient(90deg,transparent 0,#000 14px,#000 calc(100% - 14px),transparent 100%)}
+.marq.is-over.go .marq-track{display:inline-flex;width:max-content;gap:var(--gap,26px);
+  animation:marq var(--dur,9s) linear infinite}
+.marq.is-over.go .marq-i{max-width:none;overflow:visible;text-overflow:clip}
+.marq.is-over.go .marq-i.dup{display:block}
+@keyframes marq{from{transform:translateX(0)} to{transform:translateX(var(--shift,0px))}}
+@media (prefers-reduced-motion:reduce){
+  .marq.is-over.go{-webkit-mask-image:none;mask-image:none}
+  .marq.is-over.go .marq-track{display:block;width:auto;animation:none}
+  .marq.is-over.go .marq-i{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .marq.is-over.go .marq-i.dup{display:none}
+}
+
+/* ══════════ composer ══════════ */
+.composer{width:min(660px,100%);overflow:hidden}
+.ctarget{display:flex;align-items:center;gap:10px;padding:11px 16px;min-width:0;
+  border-bottom:1px solid var(--hair2);background:linear-gradient(var(--acc-soft),transparent)}
+.ctarget .g{color:var(--acc);display:grid;place-items:center;flex:none}
+.ctarget .lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--acc);flex:none}
+.ctarget .nm{font-size:13.5px;font-weight:500;flex:none;display:inline-flex;align-items:center;gap:7px}
+.ctarget .sub{font-size:13.5px;color:var(--mute);min-width:0;flex:1}
+.ctarget .swap{flex:none;font-family:var(--mono);font-size:10.5px;color:var(--faint);
+  border:1px solid var(--hair);border-radius:5px;padding:3px 7px}
+.hue-dot{width:7px;height:7px;border-radius:2px;background:var(--hue);flex:none}
+.cbody{padding:20px 18px 8px;min-height:80px}
+.cbody .typed{font-size:16.5px;line-height:1.5}
+.interim{color:var(--faint);font-style:italic}
+
+/* pasted images */
+.shots{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.shot{position:relative;width:104px;height:66px;border-radius:8px;overflow:hidden;
+  border:1px solid var(--hair);background:#151823;flex:none}
+.shot .fake{position:absolute;inset:0;
+  background:linear-gradient(150deg,#1E2233 0%,#2A2E45 55%,#1A1D2B 100%)}
+.shot .fake::before{content:"";position:absolute;left:9px;right:9px;top:11px;height:5px;border-radius:2px;
+  background:rgba(255,255,255,.16)}
+.shot .fake::after{content:"";position:absolute;left:9px;top:23px;width:58%;height:5px;border-radius:2px;
+  background:rgba(255,255,255,.1);box-shadow:0 11px 0 rgba(255,255,255,.08),0 22px 0 rgba(255,255,255,.06)}
+.shot .x{position:absolute;top:4px;right:4px;width:17px;height:17px;border-radius:99px;
+  background:rgba(8,9,12,.78);color:var(--dim);border:1px solid var(--hair);
+  display:grid;place-items:center;font-size:11px;line-height:1;cursor:pointer;z-index:2}
+.shot .tagn{position:absolute;left:5px;bottom:4px;font-family:var(--mono);font-size:8.5px;
+  color:var(--dim);background:rgba(8,9,12,.72);border-radius:3px;padding:2px 4px;z-index:2}
+.shot.drop{display:grid;place-items:center;border-style:dashed;background:transparent}
+.shot.drop span{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--faint);text-align:center;line-height:1.6}
+
+.cfoot{display:flex;align-items:center;gap:8px;padding:10px 12px 12px 14px;border-top:1px solid var(--hair2);
+  flex-wrap:wrap}
+.chip{font-family:var(--mono);font-size:11px;color:var(--mute);border:1px solid var(--hair);
+  border-radius:99px;padding:4px 10px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.chip.on{color:var(--acc);border-color:var(--acc-line);background:var(--acc-soft)}
+.sp{margin-left:auto}
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--acc);color:#1A0E08;
+  font-weight:600;font-size:13px;border:none;border-radius:8px;padding:8px 14px;cursor:pointer;font-family:var(--ui)}
+.btn .k{font-family:var(--mono);font-size:10.5px;opacity:.6}
+.btn.ghost{background:none;color:var(--dim);border:1px solid var(--hair);font-weight:500}
+.btn.danger{background:none;color:var(--del);border:1px solid rgba(224,102,107,.4);font-weight:500}
+.wave{display:flex;align-items:center;gap:3px;height:20px}
+.wave i{display:block;width:2.5px;border-radius:2px;background:var(--acc);animation:wav 1.05s ease-in-out infinite}
+.wave i:nth-child(1){height:7px}.wave i:nth-child(2){height:15px;animation-delay:.09s}
+.wave i:nth-child(3){height:20px;animation-delay:.18s}.wave i:nth-child(4){height:11px;animation-delay:.27s}
+.wave i:nth-child(5){height:17px;animation-delay:.36s}.wave i:nth-child(6){height:8px;animation-delay:.45s}
+.wave i:nth-child(7){height:13px;animation-delay:.54s}
+
+/* ══════════ reader ══════════ */
+.reader{width:min(1020px,100%);display:grid;grid-template-columns:274px minmax(0,1fr);overflow:hidden}
+@media(max-width:860px){.reader{grid-template-columns:1fr}.rail{display:none}}
+.rail{border-right:1px solid var(--hair2);background:var(--glass-lo);display:flex;flex-direction:column;min-width:0}
+.rhead{padding:12px 14px 10px;border-bottom:1px solid var(--hair2);display:flex;align-items:center;gap:8px}
+.rhead .t{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.rhead .ct{margin-left:auto;font-family:var(--mono);font-size:9.5px;color:var(--wait);
+  background:rgba(95,207,160,.12);border-radius:99px;padding:2px 7px}
+.livedot{width:6px;height:6px;border-radius:99px;background:var(--wait);flex:none;
+  box-shadow:0 0 0 3px rgba(95,207,160,.14)}
+
+.wgroup{padding:11px 9px 4px;min-width:0;position:relative}
+.wgroup + .wgroup{border-top:1px solid var(--hair2)}
+.wgroup.pinned{background:rgba(255,255,255,.022)}
+.wlabel{display:flex;align-items:center;gap:7px;padding:0 6px 8px;min-width:0}
+.wlabel .swatch{width:3px;height:12px;border-radius:2px;background:var(--hue);flex:none}
+.wlabel .nm{font-size:12.5px;font-weight:600;color:var(--hue);letter-spacing:.005em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wlabel .pt{font-family:var(--mono);font-size:10px;color:var(--faint);margin-left:auto;flex:none}
+.wlabel .pinicon{color:var(--faint);display:grid;place-items:center;flex:none}
+
+.srow{display:grid;grid-template-columns:16px minmax(0,1fr) auto;gap:9px;align-items:center;
+  padding:8px;border-radius:9px;cursor:pointer;min-width:0;position:relative}
+.srow:hover{background:rgba(255,255,255,.035)}
+.srow.reading{background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--hair)}
+.srow.sending{box-shadow:inset 0 0 0 1px var(--acc-line);background:var(--acc-soft)}
+.srow .marks{display:grid;place-items:center;color:var(--faint)}
+.srow .marks .eye{color:var(--dim)}
+.srow .marks .snd{color:var(--acc)}
+.srow .body{min-width:0}
+.srow .ttl{font-size:13px;line-height:1.35;display:flex;align-items:center;gap:6px}
+.srow.muted .ttl{color:var(--mute)}
+.srow .last{font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:2px}
+.srow .rt{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.unread{width:6px;height:6px;border-radius:99px;background:var(--hue);flex:none;position:relative}
+.unread::after{content:"";position:absolute;inset:0;border-radius:99px;background:var(--hue);
+  animation:ping 2.4s ease-out infinite}
+.pinbtn{color:var(--faint);opacity:0;transition:opacity .13s;display:grid;place-items:center;
+  background:none;border:none;cursor:pointer;padding:0}
+.srow:hover .pinbtn{opacity:1}
+.pinbtn.is-pinned{opacity:1;color:var(--hue)}
+
+.rfoot{margin-top:auto;border-top:1px solid var(--hair2)}
+.rfoot .meterrow{padding:10px 14px 11px;display:flex;flex-direction:column;gap:7px}
+.meter-top{display:flex;align-items:baseline;gap:8px;font-family:var(--mono);font-size:10px;color:var(--faint)}
+.meter-top b{color:var(--dim);font-weight:500;font-size:11px;font-variant-numeric:tabular-nums}
+.meter-top .rt{margin-left:auto}
+.bar{height:4px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.bar .b-out{background:var(--acc)} .bar .b-cw{background:var(--hue-violet)}
+.bar .b-cr{background:rgba(255,255,255,.2)}
+.rfoot .tiny{padding:0 14px 10px;font-family:var(--mono);font-size:9.5px;color:var(--faint);line-height:1.6}
+
+.pill{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+  padding:3px 7px;border-radius:99px;white-space:nowrap;font-weight:500;flex:none;
+  display:inline-flex;align-items:center;gap:5px}
+.pill.run{color:var(--run);background:rgba(224,163,78,.13);box-shadow:inset 0 0 0 1px rgba(224,163,78,.3)}
+.pill.wait{color:var(--wait);background:rgba(95,207,160,.12);box-shadow:inset 0 0 0 1px rgba(95,207,160,.28)}
+.pill.idle{color:var(--idle);background:rgba(90,96,118,.16);box-shadow:inset 0 0 0 1px rgba(90,96,118,.3)}
+.pill.run::before{content:"";display:inline-block;width:5px;height:5px;border-radius:99px;
+  background:var(--run);animation:breathe 1.6s ease-in-out infinite;flex:none}
+.pill.wait.ask::before{content:"?";font-weight:700;font-size:9px}
+.pill.wait.review::before{content:"±";font-weight:700;font-size:10px}
+
+.tx{display:flex;flex-direction:column;min-height:540px;min-width:0}
+.txhead{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--hair2);min-width:0}
+.eyebadge{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--mute);border:1px solid var(--hair);
+  border-radius:99px;padding:3px 9px;flex:none}
+.txhead h3{font-size:13.5px;font-weight:600;min-width:0;flex:1}
+.txhead .path{font-family:var(--mono);font-size:10.5px;color:var(--hue);flex:none;
+  display:inline-flex;align-items:center;gap:6px}
+.wdots{display:flex;gap:6px;flex:none}
+.wdots i{width:10px;height:10px;border-radius:99px;background:rgba(255,255,255,.14);display:block}
+
+.txbody{padding:20px 22px;display:flex;flex-direction:column;gap:16px}
+.turn{display:grid;grid-template-columns:66px minmax(0,1fr);gap:14px}
+.turn .who{font-family:var(--mono);font-size:8.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--mute);align-self:start;justify-self:start;margin-top:2px}
+.turn .who:not(:empty){border:1px solid var(--hair);border-radius:99px;padding:3px 8px;
+  background:rgba(255,255,255,.03);display:inline-flex;align-items:center;gap:5px}
+.turn .who:not(:empty)::before{content:"";width:5px;height:5px;border-radius:99px;background:var(--mute);flex:none}
+.turn.you .who:not(:empty){color:#1A0E08;background:var(--acc);border-color:var(--acc);font-weight:600}
+.turn.you .who:not(:empty)::before{background:#1A0E08;opacity:.55}
+.turn p{font-size:14.5px;line-height:1.6;color:var(--dim);max-width:64ch}
+.turn.you p{color:var(--fg);background:var(--acc-soft);border-left:2px solid var(--acc);
+  border-radius:0 10px 10px 0;padding:11px 14px;max-width:60ch}
+.fold{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;
+  color:var(--mute);border:1px solid var(--hair);border-radius:7px;padding:6px 10px;background:rgba(255,255,255,.02)}
+.tool{font-family:var(--mono);font-size:11.5px;color:var(--mute);border-left:2px solid var(--hair);
+  padding:2px 0 2px 12px}
+.tool b{color:var(--wait);font-weight:500}
+.working{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:11.5px;color:var(--run)}
+.working .s{width:9px;height:9px;border-radius:99px;border:1.5px solid var(--run);
+  border-top-color:transparent;animation:spin .8s linear infinite}
+.txfoot{margin-top:auto;border-top:1px solid var(--hair2);background:linear-gradient(transparent,var(--acc-soft))}
+.txfoot .mini{display:flex;align-items:center;gap:10px;padding:12px 16px;min-width:0}
+.txfoot .mini .g{color:var(--acc);display:grid;place-items:center;flex:none}
+.txfoot .mini .ph{font-size:14px;color:var(--faint);flex:1;min-width:0}
+.txfoot .mini .ph b{color:var(--acc);font-weight:600}
+
+/* ══════════ blocked: question ══════════ */
+.ask{border:1px solid rgba(95,207,160,.3);border-radius:12px;background:rgba(95,207,160,.05);
+  overflow:hidden}
+.ask-head{display:flex;align-items:center;gap:9px;padding:11px 14px;
+  border-bottom:1px solid rgba(95,207,160,.16);background:rgba(95,207,160,.06)}
+.ask-head .lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--wait);font-weight:500}
+.ask-head .q{font-size:13.5px;color:var(--fg);font-weight:500}
+.ask-q{padding:13px 14px 4px;font-size:15px;line-height:1.5;color:var(--fg);max-width:56ch}
+.opts{display:flex;flex-direction:column;gap:7px;padding:11px 14px 14px}
+.opt{display:grid;grid-template-columns:20px minmax(0,1fr);gap:11px;align-items:start;
+  border:1px solid var(--hair);border-radius:9px;padding:10px 12px;cursor:pointer;
+  background:rgba(255,255,255,.02);text-align:left;font-family:var(--ui);color:var(--fg)}
+.opt:hover{background:rgba(255,255,255,.05);border-color:var(--hair)}
+.opt.sel{border-color:var(--wait);background:rgba(95,207,160,.1)}
+.opt .n{font-family:var(--mono);font-size:10px;color:var(--faint);border:1px solid var(--hair);
+  border-radius:4px;width:20px;height:20px;display:grid;place-items:center;flex:none}
+.opt.sel .n{color:#0B1A14;background:var(--wait);border-color:var(--wait);font-weight:700}
+.opt .ol{font-size:13.5px;font-weight:600;line-height:1.35}
+.opt .od{font-size:12.5px;color:var(--mute);line-height:1.5;margin-top:3px}
+.opt.other .ol{color:var(--mute);font-weight:500}
+.ask-foot{display:flex;align-items:center;gap:9px;padding:10px 14px;
+  border-top:1px solid rgba(95,207,160,.16)}
+.ask-foot .hint{font-family:var(--mono);font-size:10px;color:var(--faint)}
+
+/* ══════════ diff ══════════ */
+.diff{border:1px solid var(--hair);border-radius:12px;overflow:hidden;background:rgba(10,12,18,.45)}
+.diff-head{display:flex;align-items:center;gap:10px;padding:10px 13px;border-bottom:1px solid var(--hair2);
+  background:rgba(255,255,255,.025);min-width:0}
+.diff-head .fn{font-family:var(--mono);font-size:11.5px;color:var(--fg);min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.diff-head .st{font-family:var(--mono);font-size:10.5px;flex:none;display:inline-flex;gap:7px}
+.diff-head .st .p{color:var(--add)} .diff-head .st .m{color:var(--del)}
+.diff-head .of{font-family:var(--mono);font-size:10px;color:var(--faint);margin-left:auto;flex:none}
+.dlines{font-family:var(--mono);font-size:11.5px;line-height:1.72;overflow-x:auto}
+.dl{display:grid;grid-template-columns:42px 14px minmax(0,1fr);gap:0;white-space:pre}
+.dl .ln{color:var(--faint);text-align:right;padding-right:10px;font-size:10.5px;
+  font-variant-numeric:tabular-nums;user-select:none}
+.dl .sg{text-align:center;user-select:none}
+.dl .tx2{padding-right:14px;color:var(--dim)}
+.dl.add{background:rgba(95,207,160,.09)} .dl.add .sg,.dl.add .tx2{color:var(--add)}
+.dl.del{background:rgba(224,102,107,.09)} .dl.del .sg,.dl.del .tx2{color:var(--del)}
+.dl.ctx .sg{color:var(--faint)}
+.dl.hunk{background:rgba(255,255,255,.03)}
+.dl.hunk .tx2,.dl.hunk .sg{color:var(--faint);font-size:10.5px}
+.diff-foot{display:flex;align-items:center;gap:8px;padding:10px 13px;border-top:1px solid var(--hair2);
+  background:rgba(255,255,255,.02);flex-wrap:wrap}
+.btn.accept{background:var(--add);color:#08241A}
+.filetabs{display:flex;gap:5px;padding:8px 13px 0;flex-wrap:wrap}
+.ftab{font-family:var(--mono);font-size:10px;color:var(--mute);border:1px solid var(--hair);
+  border-radius:6px 6px 0 0;border-bottom:none;padding:5px 9px;background:rgba(255,255,255,.02);
+  display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.ftab.on{color:var(--fg);background:rgba(255,255,255,.06)}
+.ftab .d{width:5px;height:5px;border-radius:99px;background:var(--wait)}
+.ftab.done .d{background:var(--faint)}
+
+/* ══════════ usage panel ══════════ */
+.usage{width:min(660px,100%);overflow:hidden}
+.u-head{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--hair2)}
+.u-head h4{font-size:14px;font-weight:600}
+.u-head .win-label{font-family:var(--mono);font-size:10px;color:var(--faint);margin-left:auto}
+.u-big{display:flex;gap:1px;background:var(--hair2)}
+.u-cell{background:var(--glass-lo);padding:14px 16px;flex:1;min-width:0}
+.u-cell .n{font-family:var(--mono);font-size:23px;font-weight:500;line-height:1;
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.u-cell .l{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--faint);margin-top:7px}
+.u-cell.cost .n{color:var(--acc)}
+.u-body{padding:15px 16px;display:flex;flex-direction:column;gap:14px}
+.u-split{display:flex;flex-direction:column;gap:7px}
+.u-split .t{display:flex;align-items:baseline;gap:8px;font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+.u-split .t b{color:var(--dim);font-weight:500}
+.u-split .t .r{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--dim)}
+.u-keys{display:flex;flex-wrap:wrap;gap:6px 16px;font-family:var(--mono);font-size:10px;color:var(--faint)}
+.u-keys span{display:inline-flex;align-items:center;gap:6px}
+.u-keys i{width:8px;height:8px;border-radius:2px;display:block}
+.u-list{display:flex;flex-direction:column;gap:1px;background:var(--hair2);border:1px solid var(--hair2);
+  border-radius:9px;overflow:hidden}
+.u-row{display:grid;grid-template-columns:9px minmax(0,1fr) auto auto;gap:11px;align-items:center;
+  background:var(--glass-lo);padding:9px 12px}
+.u-row .sw{width:3px;height:14px;border-radius:2px;background:var(--hue)}
+.u-row .nm{font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.u-row .tk,.u-row .cs{font-family:var(--mono);font-size:10.5px;color:var(--faint);
+  font-variant-numeric:tabular-nums;text-align:right}
+.u-row .cs{color:var(--acc);min-width:52px}
+.u-note{padding:0 16px 15px;font-family:var(--mono);font-size:9.5px;color:var(--faint);line-height:1.7}
+
+/* ══════════ palette ══════════ */
+.palette{width:min(600px,100%);overflow:hidden}
+.palin{display:flex;align-items:center;gap:11px;padding:15px 17px;border-bottom:1px solid var(--hair2)}
+.palin .q{font-size:16px}
+.palin .mode{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--acc);background:var(--acc-soft);border:1px solid var(--acc-line);border-radius:5px;padding:3px 8px}
+.palsec{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--faint);padding:12px 17px 6px}
+.palrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:9px 17px}
+.palrow.sel{background:var(--acc-soft);box-shadow:inset 2px 0 0 var(--acc)}
+.palrow .ic{color:var(--faint);display:grid;place-items:center}
+.palrow.sel .ic{color:var(--acc)}
+.palrow .body{min-width:0}
+.palrow .nm{font-size:14px}
+.palrow .pj{font-family:var(--mono);font-size:10px;color:var(--hue);margin-top:1px}
+.palfoot{display:flex;flex-wrap:wrap;gap:14px;padding:10px 17px;border-top:1px solid var(--hair2);
+  font-family:var(--mono);font-size:10px;color:var(--faint)}
+.palfoot span{display:inline-flex;align-items:center;gap:5px}
+
+/* ══════════ colour system board ══════════ */
+.sys{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1px;
+  background:var(--hair2);border:1px solid var(--hair2);border-radius:11px;overflow:hidden}
+.sysc{background:var(--card);padding:17px}
+.sysc h4{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--mute);margin-bottom:4px;font-weight:500}
+.sysc .role{font-family:var(--serif);font-style:italic;font-size:15px;color:var(--dim);margin-bottom:13px}
+.swatches{display:flex;flex-direction:column;gap:8px}
+.sw-row{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;color:var(--mute)}
+.sw-row i{width:22px;height:22px;border-radius:6px;flex:none;display:block}
+.sw-row b{color:var(--dim);font-weight:500}
+.sw-row .hex{margin-left:auto;color:var(--faint);font-size:10px}
+
+/* ══════════ marquee close-up ══════════ */
+.zoom{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px;width:100%}
+.zoom-cell{display:flex;flex-direction:column;gap:10px;min-width:0}
+.zoom-cap{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint)}
+.zoom-cap b{color:var(--acc);font-weight:500}
+.zoom-rail{background:var(--glass);backdrop-filter:blur(26px) saturate(165%);
+  -webkit-backdrop-filter:blur(26px) saturate(165%);border:1px solid var(--hair);
+  border-radius:12px;padding:8px;width:312px;max-width:100%}
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <header class="masthead">
+    <span class="eyebrow">UI Mockups · direction chosen · not built yet</span>
+    <h1>Sidecar<br><em>a window onto your sessions</em></h1>
+    <p class="standfirst">
+      A translucent, always-on-top companion for the Claude Code sessions open in Antigravity.
+      Read any of them, answer what they're blocked on, approve their edits, and send a prompt into
+      whichever one you choose — without pulling the IDE forward and burying everything else.
+    </p>
+    <div class="facts">
+      <span><b>Scope</b> · sessions in live Antigravity windows only</span>
+      <span><b>Transcripts</b> · <code>~/.claude/projects/**/*.jsonl</code></span>
+      <span><b>Windows</b> · <code>~/.claude/ide/*.lock</code></span>
+    </div>
+  </header>
+
+  <!-- ═══════ 01 composer ═══════ -->
+  <section class="block">
+    <div class="bhead">
+      <div><span class="bnum">Frame 01 — the hotkey popup</span>
+        <h2>Type it, say it, or paste a screenshot into it</h2></div>
+      <p class="bnote">The send target is the first thing you see, not a setting buried somewhere.
+        You can never fire a prompt without knowing where it lands.</p>
+    </div>
+
+    <div class="desk"><div>
+      <div class="win composer" style="--hue:var(--hue-cyan)">
+        <div class="ctarget">
+          <span class="g"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 8h10M8.5 4.5 12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span class="lbl">Sending to</span>
+          <span class="nm"><span class="hue-dot"></span>VR Launcher</span>
+          <span class="sub marq">· Fix controller drift on reconnect after headset sleep</span>
+          <span class="swap">⌥S</span>
+        </div>
+        <div class="cbody">
+          <div class="typed">the overlay still clips like this after your fix — see the corner<span class="caret"></span></div>
+          <div class="shots">
+            <span class="shot"><span class="fake"></span><span class="tagn">Screenshot 1</span><span class="x">×</span></span>
+            <span class="shot"><span class="fake"></span><span class="tagn">Screenshot 2</span><span class="x">×</span></span>
+            <span class="shot drop"><span>⌘V<br>or drop</span></span>
+          </div>
+        </div>
+        <div class="cfoot">
+          <span class="chip"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="5.5" y="2" width="5" height="8" rx="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>
+          <span class="chip">plan only</span>
+          <span class="chip on">be terse</span>
+          <span class="chip">+ context</span>
+          <span class="sp"></span>
+          <span class="kbd">⇧↵ queue</span>
+          <button class="btn">Send <span class="k">↵</span></button>
+        </div>
+      </div>
+    </div></div>
+
+    <div class="notes">
+      <div class="note"><h4>Paste an image straight in</h4><p><code>⌘V</code> a screenshot, or drag one onto the window. It attaches as a thumbnail you can drop again before sending — the transcript format already carries <code>image+text</code> user turns, so nothing has to be invented for this.</p></div>
+      <div class="note"><h4>Summon</h4><p>A global hotkey opens it over whatever you were doing. <code>Esc</code> hides but keeps the draft — a half-formed thought is never destroyed.</p></div>
+      <div class="note"><h4>Modifier chips</h4><p>One-tap constraints you'd otherwise retype every time. They append to the prompt and persist per session.</p></div>
+      <div class="note"><h4>Queue vs send</h4><p><code>⇧↵</code> queues instead of sending, for when the target is mid-task. The format already has a <code>queue-operation</code> record.</p></div>
+    </div>
+  </section>
+
+  <!-- ═══════ 02 dictation ═══════ -->
+  <section class="block">
+    <div class="bhead">
+      <div><span class="bnum">Frame 02 — dictation</span>
+        <h2>Speak it, and let it be tidied up</h2></div>
+      <p class="bnote">Speech is rambly. A cheap model pass turns it into something worth sending —
+        shown before it goes, never applied silently.</p>
+    </div>
+
+    <div class="desk"><div>
+      <div class="win composer" style="--hue:var(--hue-violet)">
+        <div class="ctarget">
+          <span class="g"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 8h10M8.5 4.5 12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span class="lbl">Sending to</span>
+          <span class="nm"><span class="hue-dot"></span>Prompt Thing</span>
+          <span class="sub marq">· Prompt input keybind for Claude sessions</span>
+          <span class="swap">⌥S</span>
+        </div>
+        <div class="cbody">
+          <div class="typed interim">so basically like can you make it so the session list only shows the ones that are uh actually open in antigravity right now</div>
+          <div style="display:flex;gap:10px;align-items:flex-start;margin-top:14px;padding:11px 12px;border:1px dashed var(--acc-line);border-radius:9px;background:var(--acc-soft)">
+            <span style="font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);white-space:nowrap;padding-top:3px">Cleaned</span>
+            <p style="font-size:14.5px;line-height:1.5;color:var(--dim)">Scope the session list to sessions currently open in Antigravity, rather than every session on disk.</p>
+          </div>
+        </div>
+        <div class="cfoot">
+          <span class="chip on"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="5.5" y="2" width="5" height="8" rx="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> Listening</span>
+          <span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+          <span class="sp"></span>
+          <span class="kbd">⌥C raw</span>
+          <button class="btn">Send cleaned <span class="k">↵</span></button>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- ═══════ 03 reader ═══════ -->
+  <section class="block">
+    <div class="bhead">
+      <div><span class="bnum">Frame 03 — reading</span>
+        <h2>Watch one session, type into another</h2></div>
+      <p class="bnote">Pinned sessions sit up top, unread ones carry a dot in their project's colour,
+        and the meter at the foot says what today has cost.</p>
+    </div>
+
+    <div class="desk tall"><div>
+      <div class="win reader">
+        <aside class="rail">
+          <div class="rhead"><span class="livedot"></span><span class="t">Open in Antigravity</span>
+            <span class="ct">2 need you</span></div>
+
+          <!-- pinned -->
+          <div class="wgroup pinned" style="--hue:var(--hue-cyan)">
+            <div class="wlabel">
+              <span class="pinicon"><svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M9.5 1.5 14.5 6.5l-1.6 1.6-1-.4-2.6 2.6.5 2.2L8.4 14 6 11.6 2.6 15 1 13.4 4.4 10 2 7.6l1.5-1.4 2.2.5 2.6-2.6-.4-1z"/></svg></span>
+              <span class="nm">Pinned</span>
+            </div>
+            <div class="srow sending" style="--hue:var(--hue-violet)">
+              <span class="marks"><span class="snd"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8h10M8.5 4.5 12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+              <span class="body">
+                <span class="ttl marq">Prompt input keybind for Claude sessions</span>
+                <span class="last marq">Prompt Thing · "dont build the app first tho…"</span>
+              </span>
+              <span class="rt"><span class="pill run">Running</span>
+                <button class="pinbtn is-pinned" title="Unpin"><svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M9.5 1.5 14.5 6.5l-1.6 1.6-1-.4-2.6 2.6.5 2.2L8.4 14 6 11.6 2.6 15 1 13.4 4.4 10 2 7.6l1.5-1.4 2.2.5 2.6-2.6-.4-1z"/></svg></button></span>
+            </div>
+          </div>
+
+          <div class="wgroup" style="--hue:var(--hue-cyan)">
+            <div class="wlabel"><span class="swatch"></span><span class="nm">VR Launcher</span><span class="pt">:40782</span></div>
+            <div class="srow reading">
+              <span class="marks"><span class="eye"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M1.5 8S3.9 3.5 8 3.5 14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8Z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/></svg></span></span>
+              <span class="body">
+                <span class="ttl marq">Fix controller drift on reconnect after headset sleep</span>
+                <span class="last marq">"Which filter should reset on resume?"</span>
+              </span>
+              <span class="rt"><span class="pill wait ask">Answer</span>
+                <button class="pinbtn" title="Pin"><svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M9.5 1.5 14.5 6.5l-1.6 1.6-1-.4-2.6 2.6.5 2.2L8.4 14 6 11.6 2.6 15 1 13.4 4.4 10 2 7.6l1.5-1.4 2.2.5 2.6-2.6-.4-1z"/></svg></button></span>
+            </div>
+            <div class="srow">
+              <span class="marks"></span>
+              <span class="body">
+                <span class="ttl"><span class="unread"></span><span class="marq" style="flex:1">Steam overlay hook crash on second launch</span></span>
+                <span class="last marq">3 edits waiting for review</span>
+              </span>
+              <span class="rt"><span class="pill wait review">Review</span></span>
+            </div>
+          </div>
+
+          <div class="wgroup" style="--hue:var(--hue-magenta)">
+            <div class="wlabel"><span class="swatch"></span><span class="nm">GORILLASAHDERS</span><span class="pt">:12696</span></div>
+            <div class="srow muted">
+              <span class="marks"></span>
+              <span class="body">
+                <span class="ttl marq">Shader compile order regression in the deferred pass</span>
+                <span class="last marq">3d ago · 25.3 MB</span>
+              </span>
+              <span class="rt"><span class="pill idle">Idle</span></span>
+            </div>
+          </div>
+
+          <div class="rfoot">
+            <div class="meterrow">
+              <div class="meter-top"><span>Today</span><b>1.42M</b><span>tokens</span><span class="rt">$4.18</span></div>
+              <div class="bar"><i class="b-out" style="width:22%"></i><i class="b-cw" style="width:14%"></i><i class="b-cr" style="width:58%"></i></div>
+            </div>
+            <div class="tiny">3 windows · 5 sessions<br>44 more on disk — hidden</div>
+          </div>
+        </aside>
+
+        <div class="tx" style="--hue:var(--hue-cyan)">
+          <div class="txhead">
+            <span class="eyebadge"><svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M1.5 8S3.9 3.5 8 3.5 14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8Z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/></svg> Reading</span>
+            <h3 class="marq">Fix controller drift on reconnect after headset sleep</h3>
+            <span class="path"><span class="hue-dot"></span>VR Launcher</span>
+            <span class="wdots"><i></i><i></i><i></i></span>
+          </div>
+
+          <div class="txbody">
+            <div class="turn you"><span class="who">You</span>
+              <p>the drift comes back every time the headset sleeps and wakes. does the filter reset?</p></div>
+            <div class="turn"><span class="who">Claude</span>
+              <div><span class="fold">▸ Thought for 9s · 1.2k tokens</span></div></div>
+            <div class="turn"><span class="who"></span>
+              <div class="tool">Read <b>src/tracking/PoseFilter.cs</b> · 240 lines</div></div>
+            <div class="turn"><span class="who">Claude</span>
+              <p>It doesn't reset — the filter keeps its accumulator across sleep, so on wake it blends
+                 stale pre-sleep samples with fresh ones for about 400&nbsp;ms. That's your drift.</p></div>
+
+            <div class="turn"><span class="who"></span>
+              <div class="ask">
+                <div class="ask-head"><span class="lbl">Waiting on you</span><span class="q">Which reset should I use?</span></div>
+                <div class="opts">
+                  <button class="opt sel"><span class="n">1</span><span><span class="ol">Clear on resume</span><span class="od">Drop the accumulator whenever the device wakes. Simplest, one line.</span></span></button>
+                  <button class="opt"><span class="n">2</span><span><span class="ol">Decay by gap length</span><span class="od">Weight old samples down by how long it slept. Smoother, more code.</span></span></button>
+                  <button class="opt other"><span class="n">3</span><span><span class="ol">Something else…</span><span class="od">Type an answer instead</span></span></button>
+                </div>
+                <div class="ask-foot"><span class="hint">1–3 to pick</span><span class="kbd">↵ answer</span>
+                  <span class="sp"></span><button class="btn" style="padding:6px 12px">Answer <span class="k">↵</span></button></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="txfoot">
+            <div class="mini">
+              <span class="g"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 8h10M8.5 4.5 12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span class="ph marq">Message <b>Prompt Thing</b> — not the session you're reading…</span>
+              <span class="kbd">⌥S</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div></div>
+
+    <div class="legend">
+      <span class="li"><span class="pill run">Running</span> mid-task</span>
+      <span class="li"><span class="pill wait ask">Answer</span> blocked on a question</span>
+      <span class="li"><span class="pill wait review">Review</span> edits waiting for approval</span>
+      <span class="li"><span class="pill idle">Idle</span> untouched for hours</span>
+      <span class="li"><span class="unread"></span> unread since you last looked</span>
+    </div>
+
+    <div class="notes">
+      <div class="note"><h4>Answer without leaving</h4><p>When a session is blocked on a multiple-choice question, the options render as pickable cards right in the transcript. Number keys select, <code>↵</code> sends. "Something else" falls back to free text.</p></div>
+      <div class="note"><h4>Three waiting states, one colour</h4><p><em>Answer</em>, <em>Review</em> and plain <em>You</em> all read as green because they all mean the same thing — it wants you. The glyph says which kind, so the palette doesn't inflate.</p></div>
+      <div class="note"><h4>Pinned float to the top</h4><p>A pin keeps a session in its own group above everything, regardless of which window it belongs to. Hover any row to pin it.</p></div>
+      <div class="note"><h4>Unread is per-session</h4><p>A dot in the project's hue appears when a session writes output you haven't looked at. Reading it clears the dot.</p></div>
+      <div class="note"><h4>Who said it, twice over</h4><p>Your turns get a filled clay badge and a tinted panel with a rule down the left. Claude's sit flat on the glass with an outlined badge.</p></div>
+    </div>
+  </section>
+
+  <!-- ═══════ 04 diff ═══════ -->
+  <section class="block">
+    <div class="bhead">
+      <div><span class="bnum">Frame 04 — approving edits</span>
+        <h2>Accept or reject without opening the editor</h2></div>
+      <p class="bnote">The extension already exposes accept and reject commands. Sidecar just needs
+        to show you what you're agreeing to.</p>
+    </div>
+
+    <div class="desk mid"><div>
+      <div class="win" style="width:min(720px,100%);overflow:hidden;--hue:var(--hue-cyan)">
+        <div class="txhead">
+          <span class="pill wait review">Review</span>
+          <h3 class="marq">Steam overlay hook crash on second launch</h3>
+          <span class="path"><span class="hue-dot"></span>VR Launcher</span>
+        </div>
+
+        <div class="filetabs">
+          <span class="ftab on"><span class="d"></span>OverlayHook.cpp</span>
+          <span class="ftab"><span class="d"></span>HookRegistry.h</span>
+          <span class="ftab done">InjectorTests.cpp</span>
+        </div>
+
+        <div style="padding:0 13px 13px">
+          <div class="diff">
+            <div class="diff-head">
+              <span class="fn">src/overlay/OverlayHook.cpp</span>
+              <span class="st"><span class="p">+6</span><span class="m">−2</span></span>
+              <span class="of">file 1 of 3</span>
+            </div>
+            <div class="dlines">
+              <div class="dl hunk"><span class="ln"></span><span class="sg"></span><span class="tx2">@@ -48,7 +48,11 @@ bool OverlayHook::Attach()</span></div>
+              <div class="dl ctx"><span class="ln">48</span><span class="sg"> </span><span class="tx2">  if (!module_) return false;</span></div>
+              <div class="dl del"><span class="ln">49</span><span class="sg">−</span><span class="tx2">  auto* target = ResolvePresent(module_);</span></div>
+              <div class="dl del"><span class="ln">50</span><span class="sg">−</span><span class="tx2">  return Install(target);</span></div>
+              <div class="dl add"><span class="ln">49</span><span class="sg">+</span><span class="tx2">  if (IsAlreadyResident(module_)) {</span></div>
+              <div class="dl add"><span class="ln">50</span><span class="sg">+</span><span class="tx2">    LOG_WARN("overlay already hooked; skipping");</span></div>
+              <div class="dl add"><span class="ln">51</span><span class="sg">+</span><span class="tx2">    return true;</span></div>
+              <div class="dl add"><span class="ln">52</span><span class="sg">+</span><span class="tx2">  }</span></div>
+              <div class="dl add"><span class="ln">53</span><span class="sg">+</span><span class="tx2">  auto* target = ResolvePresent(module_);</span></div>
+              <div class="dl add"><span class="ln">54</span><span class="sg">+</span><span class="tx2">  return target ? Install(target) : false;</span></div>
+              <div class="dl ctx"><span class="ln">55</span><span class="sg"> </span><span class="tx2">}</span></div>
+            </div>
+            <div class="diff-foot">
+              <button class="btn accept">Accept <span class="k">⌥↵</span></button>
+              <button class="btn danger">Reject <span class="k" style="opacity:.6">⌥⌫</span></button>
+              <button class="btn ghost">Open in Antigravity</button>
+              <span class="sp"></span>
+              <span class="kbd">⌥A accept all 3</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div></div>
+
+    <div class="notes">
+      <div class="note"><h4>Grounded, not invented</h4><p>The Claude Code extension contributes <code>acceptProposedDiff</code> and <code>rejectProposedDiff</code>. These buttons call those — Sidecar isn't writing files itself.</p></div>
+      <div class="note"><h4>One file at a time</h4><p>Tabs across the top, with a dot for each file still pending. Accept-all exists, but it's a keystroke away rather than the default button.</p></div>
+      <div class="note"><h4>Reject is never the loud one</h4><p>Accept is filled green, reject is an outline. Destructive actions shouldn't compete visually with the thing you'll press ninety percent of the time.</p></div>
+      <div class="note"><h4>Escape hatch</h4><p>Anything you'd rather see properly opens in Antigravity at that file, one click.</p></div>
+    </div>
+  </section>
+
+  <!-- ═══════ 05 usage ═══════ -->
+  <section class="block">
+    <div class="bhead">
+      <div><span class="bnum">Frame 05 — usage</span>
+        <h2>What today actually cost</h2></div>
+      <p class="bnote">Every assistant record carries its own token counts. Add them up per session
+        and you get this for free, with no API call at all.</p>
+    </div>
+
+    <div class="desk mid"><div>
+      <div class="win usage">
+        <div class="u-head"><h4>Usage</h4><span class="win-label">last 24 hours · all sessions</span></div>
+
+        <div class="u-big">
+          <div class="u-cell"><div class="n">1.42M</div><div class="l">Tokens</div></div>
+          <div class="u-cell cost"><div class="n">$4.18</div><div class="l">Estimated cost</div></div>
+          <div class="u-cell"><div class="n">6</div><div class="l">Sessions touched</div></div>
+        </div>
+
+        <div class="u-body">
+          <div class="u-split">
+            <div class="t"><b>Where it went</b><span class="r">1,421,880 tokens</span></div>
+            <div class="bar" style="height:7px">
+              <i class="b-out" style="width:22%"></i><i class="b-cw" style="width:14%"></i><i class="b-cr" style="width:58%"></i>
+              <i style="width:6%;background:rgba(255,255,255,.09)"></i>
+            </div>
+            <div class="u-keys">
+              <span><i style="background:var(--acc)"></i>Output 313K</span>
+              <span><i style="background:var(--hue-violet)"></i>Cache writes 199K</span>
+              <span><i style="background:rgba(255,255,255,.2)"></i>Cache reads 824K</span>
+              <span><i style="background:rgba(255,255,255,.09)"></i>Input 86K</span>
+            </div>
+          </div>
+
+          <div class="u-list">
+            <div class="u-row" style="--hue:var(--hue-violet)">
+              <span class="sw"></span><span class="nm">Prompt input keybind for Claude sessions</span>
+              <span class="tk">612K</span><span class="cs">$1.94</span>
+            </div>
+            <div class="u-row" style="--hue:var(--hue-cyan)">
+              <span class="sw"></span><span class="nm">Fix controller drift on reconnect</span>
+              <span class="tk">431K</span><span class="cs">$1.28</span>
+            </div>
+            <div class="u-row" style="--hue:var(--hue-cyan)">
+              <span class="sw"></span><span class="nm">Steam overlay hook crash on second launch</span>
+              <span class="tk">248K</span><span class="cs">$0.71</span>
+            </div>
+            <div class="u-row" style="--hue:var(--hue-magenta)">
+              <span class="sw"></span><span class="nm">Shader compile order regression</span>
+              <span class="tk">131K</span><span class="cs">$0.25</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="u-note">
+          Counted from transcript records, priced at Claude Opus 5 rates. Cache reads are billed
+          well below fresh input, which is why the largest bar is not the largest number.
+        </div>
+      </div>
+    </div></div>
+
+    <div class="notes">
+      <div class="note"><h4>Real numbers, verified</h4><p>Every assistant record carries <code>input_tokens</code>, <code>output_tokens</code>, cache reads and writes, and thinking tokens, plus the model id to price them. This session alone logged 355K output and 12.8M cache reads.</p></div>
+      <div class="note"><h4>Cache reads dominate — say so</h4><p>They're most of the volume and a small part of the bill. A meter that showed one bar of "tokens" would be actively misleading, so the split is the point.</p></div>
+      <div class="note"><h4>Per session, in its own hue</h4><p>The breakdown is coloured by project, so you can see at a glance which one is expensive without reading the names.</p></div>
+      <div class="note"><h4>What this can't show</h4><p>How much of your <em>plan</em> is left. There's no quota or reset-time anywhere in <code>~/.claude</code>, so Sidecar can honestly report spend but not remaining allowance. Better to omit it than fake it.</p></div>
+    </div>
+  </section>
+
+  <!-- ═══════ 06 colour system ═══════ -->
+  <section class="block">
+    <div class="bhead">
+      <div><span class="bnum">Frame 06 — the colour system</span>
+        <h2>Three systems that must never be confused</h2></div>
+      <p class="bnote">Once projects get their own hues, colour has three jobs at once. Keeping them
+        in separate families is what stops the whole thing turning to soup.</p>
+    </div>
+
+    <div class="sys">
+      <div class="sysc">
+        <h4>Semantic</h4>
+        <p class="role">What a session is doing</p>
+        <div class="swatches">
+          <div class="sw-row"><i style="background:#E0A34E"></i><b>Running</b><span class="hex">#E0A34E</span></div>
+          <div class="sw-row"><i style="background:#5FCFA0"></i><b>Wants you</b><span class="hex">#5FCFA0</span></div>
+          <div class="sw-row"><i style="background:#5A6076"></i><b>Idle</b><span class="hex">#5A6076</span></div>
+        </div>
+      </div>
+      <div class="sysc">
+        <h4>Action</h4>
+        <p class="role">Things you do</p>
+        <div class="swatches">
+          <div class="sw-row"><i style="background:#D97757"></i><b>Send target, buttons, your turns</b><span class="hex">#D97757</span></div>
+          <div class="sw-row"><i style="background:#5FCFA0"></i><b>Accept a diff</b><span class="hex">#5FCFA0</span></div>
+          <div class="sw-row"><i style="background:#E0666B"></i><b>Reject, deletions</b><span class="hex">#E0666B</span></div>
+        </div>
+      </div>
+      <div class="sysc">
+        <h4>Identity</h4>
+        <p class="role">Which project this is</p>
+        <div class="swatches">
+          <div class="sw-row"><i style="background:#8B7FE8"></i><b>Prompt Thing</b><span class="hex">#8B7FE8</span></div>
+          <div class="sw-row"><i style="background:#4FB3D9"></i><b>VR Launcher</b><span class="hex">#4FB3D9</span></div>
+          <div class="sw-row"><i style="background:#D07BC8"></i><b>GORILLASAHDERS</b><span class="hex">#D07BC8</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <div class="note"><h4>Identity hues stay cool</h4><p>Every project colour comes from the violet–cyan–magenta side. State is warm amber or mint; action is warm clay. A cool hue therefore never reads as "this needs attention".</p></div>
+      <div class="note"><h4>Identity gets the smallest surfaces</h4><p>A 3px swatch, the project name, an unread dot, a bar segment. It never fills a button or a pill, because those belong to the other two systems.</p></div>
+      <div class="note"><h4>Assigned, then remembered</h4><p>Hues are handed out from the ring in the order projects first appear, then stored — so a project keeps its colour, and you learn it.</p></div>
+      <div class="note"><h4>Overridable</h4><p>Right-click a project to set its hue by hand. Colour-based recognition only works if the colour matches whatever's in your head.</p></div>
+    </div>
+  </section>
+
+  <!-- ═══════ 07 marquee detail ═══════ -->
+  <section class="block">
+    <div class="bhead">
+      <div><span class="bnum">Detail — long titles</span>
+        <h2>A title too long to fit loops itself</h2></div>
+      <p class="bnote">Hover any row below. At rest it truncates; once hovered or active, the text
+        loops past continuously, with the next pass arriving as the last one leaves.</p>
+    </div>
+
+    <div class="desk mid"><div>
+      <div class="zoom">
+        <div class="zoom-cell">
+          <span class="zoom-cap">At rest — <b>truncated</b></span>
+          <div class="zoom-rail" style="--hue:var(--hue-cyan)">
+            <div class="srow" style="pointer-events:none">
+              <span class="marks"><span class="eye"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M1.5 8S3.9 3.5 8 3.5 14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8Z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/></svg></span></span>
+              <span class="body">
+                <span class="ttl marq">Fix controller drift on reconnect after headset sleep</span>
+                <span class="last marq">"Rebuilt the pose filter to clear on resume…"</span>
+              </span>
+              <span class="rt"><span class="pill wait">You</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="zoom-cell">
+          <span class="zoom-cap">Hover or active — <b>loops</b></span>
+          <div class="zoom-rail" style="--hue:var(--hue-cyan)">
+            <div class="srow reading">
+              <span class="marks"><span class="eye"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M1.5 8S3.9 3.5 8 3.5 14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8Z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/></svg></span></span>
+              <span class="body">
+                <span class="ttl marq">Fix controller drift on reconnect after headset sleep</span>
+                <span class="last marq">"Rebuilt the pose filter to clear on resume…"</span>
+              </span>
+              <span class="rt"><span class="pill wait">You</span></span>
+            </div>
+            <div class="srow sending" style="--hue:var(--hue-magenta)">
+              <span class="marks"><span class="snd"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8h10M8.5 4.5 12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+              <span class="body">
+                <span class="ttl marq">Shader compile order regression in the deferred pass</span>
+                <span class="last marq">"Sorted the pass list by dependency depth…"</span>
+              </span>
+              <span class="rt"><span class="pill run">Run</span></span>
+            </div>
+            <div class="srow muted">
+              <span class="marks"></span>
+              <span class="body">
+                <span class="ttl marq">Short one</span>
+                <span class="last marq">fits — never scrolls</span>
+              </span>
+              <span class="rt"><span class="pill idle">Idle</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div></div>
+
+    <div class="notes">
+      <div class="note"><h4>A row moves as one</h4><p>The title and its description share a single distance and duration, and each line's gap is padded so both duplicates land on the same beat. They can't drift apart.</p></div>
+      <div class="note"><h4>Constant speed</h4><p>Travel distance sets the duration, so a very long title doesn't race past while a slightly-long one crawls. About 38&nbsp;px per second either way.</p></div>
+      <div class="note"><h4>Only when it overflows</h4><p>Measured per row against its real width. A title that fits is left completely alone — no drift, no wobble.</p></div>
+      <div class="note"><h4>Quiet by default</h4><p>Only hovered and active rows move, and <code>prefers-reduced-motion</code> turns it all back into an ellipsis.</p></div>
+    </div>
+  </section>
+
+  <!-- ═══════ 08 switcher ═══════ -->
+  <section class="block">
+    <div class="bhead">
+      <div><span class="bnum">Frame 08 — the switcher</span>
+        <h2>One palette, two verbs</h2></div>
+      <p class="bnote">The same list opens in read mode or send mode. The mode is stated in the input,
+        so you're never guessing which one you're picking.</p>
+    </div>
+
+    <div class="desk mid"><div>
+      <div class="win palette">
+        <div class="palin"><span class="mode">Send to</span><span class="q">vr</span><span class="caret"></span></div>
+        <div class="palsec">Open in Antigravity</div>
+        <div class="palrow sel" style="--hue:var(--hue-cyan)">
+          <span class="ic"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 8h10M8.5 4.5 12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span class="body">
+            <span class="nm marq">Fix controller drift on reconnect after headset sleep</span>
+            <span class="pj marq">VR Launcher · :40782</span>
+          </span>
+          <span class="pill wait ask">Answer</span>
+        </div>
+        <div class="palrow" style="--hue:var(--hue-cyan)">
+          <span class="ic"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 8h10M8.5 4.5 12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span class="body">
+            <span class="nm marq">Steam overlay hook crash on second launch</span>
+            <span class="pj marq">VR Launcher · :40782</span>
+          </span>
+          <span class="pill wait review">Review</span>
+        </div>
+        <div class="palfoot">
+          <span><span class="kbd">↑↓</span> move</span>
+          <span><span class="kbd">↵</span> set target</span>
+          <span><span class="kbd">⇥</span> read mode</span>
+          <span><span class="kbd">⌘P</span> pin</span>
+          <span><span class="kbd">esc</span> back</span>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+  <footer class="foot">
+    <p><b>Grounded in real data from this machine.</b> Titles from the <code>aiTitle</code> record, previews from <code>lastPrompt</code>, status from the last transcript record, token and cost figures from the <code>usage</code> object on every assistant record, and the window list from live <code>~/.claude/ide/*.lock</code> files.</p>
+    <p><b>What these mockups are honest about.</b> A lock file identifies an open <em>workspace</em>, not which session a window is driving, and a stale lock can point at a recycled pid — so liveness needs the process image name too. Plan quota isn't stored on disk anywhere, so usage shows spend, never remaining allowance.</p>
+    <p><b>Nothing is built.</b> Mockups only — no session is read, written, or sent to by this file.</p>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  var SPEED = 38;   // px per second — same rate for every title
+
+  // Every line inside one row scrolls as a single unit: shared distance, shared
+  // duration, so a title and its description can never drift apart.
+  function groupsOf(root){
+    var out = [], seen = new Set();
+    root.querySelectorAll('.srow .body, .palrow .body').forEach(function(g){
+      out.push(g); g.querySelectorAll('.marq').forEach(function(m){seen.add(m);});
+    });
+    root.querySelectorAll('.marq').forEach(function(m){ if(!seen.has(m)) out.push(m); });
+    return out;
+  }
+  function linesOf(g){
+    return g.classList.contains('marq') ? [g]
+         : Array.prototype.slice.call(g.querySelectorAll('.marq'));
+  }
+
+  function wrap(el){
+    if(el.querySelector(':scope > .marq-track')) return;
+    var track = document.createElement('span');
+    track.className = 'marq-track';
+    var first = document.createElement('span');
+    first.className = 'marq-i';
+    while(el.firstChild) first.appendChild(el.firstChild);
+    var dup = first.cloneNode(true);
+    dup.classList.add('dup');
+    dup.setAttribute('aria-hidden','true');
+    track.appendChild(first); track.appendChild(dup);
+    el.appendChild(track);
+  }
+
+  function widthOf(el){
+    var track = el.querySelector(':scope > .marq-track');
+    if(!track) return 0;
+    var first = track.firstElementChild;
+    var pt = track.style.cssText, pf = first.style.cssText;
+    track.style.cssText = 'display:inline-flex;width:max-content';
+    first.style.cssText = 'max-width:none;overflow:visible;text-overflow:clip';
+    var w = first.scrollWidth;
+    track.style.cssText = pt; first.style.cssText = pf;
+    return w;
+  }
+
+  function clear(el){
+    el.classList.remove('is-over','go');
+    el.style.removeProperty('--gap');
+    el.style.removeProperty('--shift');
+    el.style.removeProperty('--dur');
+  }
+
+  function measureGroup(g){
+    var lines = linesOf(g), widths = [], maxW = 0, over = false;
+    lines.forEach(function(el){
+      el.classList.remove('go');
+      var w = widthOf(el);
+      widths.push(w);
+      if(w > maxW) maxW = w;
+      if(w - el.clientWidth > 2) over = true;
+    });
+    if(!over){ lines.forEach(clear); return; }
+
+    var box  = lines[0].clientWidth || 200;
+    var base = Math.max(20, Math.min(32, Math.round(box * 0.13)));
+    var span = maxW + base;
+
+    lines.forEach(function(el, i){
+      el.classList.add('is-over');
+      el.style.setProperty('--gap',   (span - widths[i]) + 'px');
+      el.style.setProperty('--shift', (-span) + 'px');
+      el.style.setProperty('--dur',   (span / SPEED).toFixed(2) + 's');
+    });
+  }
+
+  var all = Array.prototype.slice.call(document.querySelectorAll('.marq'));
+  all.forEach(wrap);
+  var groups = groupsOf(document);
+  function measureAll(){ groups.forEach(measureGroup); }
+
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(measureAll);
+  measureAll();
+  window.addEventListener('resize', measureAll);
+
+  function armed(el){
+    var row = el.closest('.srow, .palrow, .ctarget, .txhead, .mini');
+    if(!row) return false;
+    if(row.matches(':hover')) return true;
+    return row.classList.contains('reading') || row.classList.contains('sending')
+        || row.classList.contains('sel');
+  }
+  function tick(){
+    all.forEach(function(el){
+      if(el.classList.contains('is-over')) el.classList.toggle('go', armed(el));
+    });
+  }
+  document.addEventListener('mouseover', tick);
+  document.addEventListener('mouseout', tick);
+  tick();
+
+  // option cards: click or number key
+  var opts = Array.prototype.slice.call(document.querySelectorAll('.opt'));
+  function pick(o){ opts.forEach(function(x){ x.classList.toggle('sel', x===o); }); }
+  opts.forEach(function(o){ o.addEventListener('click', function(){ pick(o); }); });
+  document.addEventListener('keydown', function(e){
+    var i = '123'.indexOf(e.key);
+    if(i > -1 && opts[i]) pick(opts[i]);
+  });
+})();
+</script>
+</body>
+</html>

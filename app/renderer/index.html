@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'">
+<title>Sidecar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400..700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="titlebar">
+  <span class="mark" aria-hidden="true"></span>
+  <span class="brand">Sidecar</span>
+  <div class="winbtns">
+    <button class="winbtn tb-btn" id="btn-newprompt" title="New prompt (Ctrl+Alt+Space)" style="width:auto;padding:0 9px;gap:6px;display:inline-flex;align-items:center">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 2.5v11M2.5 8h11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span style="font-size:11.5px">New prompt</span>
+    </button>
+    <button class="winbtn tb-btn" id="btn-usage" title="Usage">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 13.5V9M6 13.5V5.5M10 13.5V7.5M14 13.5V2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+    <button class="winbtn tb-btn" id="btn-setup" title="Diff-approval shortcuts">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 5a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" stroke="currentColor" stroke-width="1.4"/><path d="M8 1.5v1.4M8 13.1v1.4M14.5 8h-1.4M2.9 8H1.5M12.4 3.6l-1 1M4.6 11.4l-1 1M12.4 12.4l-1-1M4.6 4.6l-1-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    </button>
+    <button class="winbtn tb-btn" id="btn-min" title="Minimize">–</button>
+    <button class="winbtn tb-btn close" id="btn-hide" title="Hide (stays in tray)">×</button>
+  </div>
+</div>
+
+<div class="updatebar" id="updatebar" hidden>
+  <span class="ub-dot"></span>
+  <span class="ub-text" id="ub-text"></span>
+  <span class="ub-bar" id="ub-bar" hidden><i id="ub-fill"></i></span>
+  <span class="ub-actions" id="ub-actions"></span>
+  <button class="ub-x" id="ub-dismiss" title="Dismiss">✕</button>
+</div>
+
+<div class="shell">
+  <aside class="rail">
+    <div class="rhead"><span class="livedot" id="livedot"></span><span class="t">Open in Antigravity</span>
+      <span class="ct" id="need-count" style="display:none"></span></div>
+    <div class="rlist" id="rlist"><div class="empty-rail">Looking for open sessions…</div></div>
+    <div class="rfoot">
+      <div class="meterrow" id="planmini" style="display:none"></div>
+      <div class="meterrow" id="meterrow">
+        <div class="meter-top"><span>Today</span><b id="m-tokens">—</b><span>tokens</span><span class="rt" id="m-cost">—</span></div>
+        <div class="bar"><i class="b-out" id="b-out" style="width:0%"></i><i class="b-cw" id="b-cw" style="width:0%"></i><i class="b-cr" id="b-cr" style="width:0%"></i><i class="b-in" id="b-in" style="width:0%"></i></div>
+      </div>
+      <div class="tiny" id="rfoot-tiny">—</div>
+    </div>
+  </aside>
+
+  <section class="tx" id="tx">
+    <div class="txhead" id="tx-head" style="display:none">
+      <span class="eyebadge" id="tx-eyebadge">
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M1.5 8S3.9 3.5 8 3.5 14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8Z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/></svg>
+        Reading
+      </span>
+      <h3 class="marq" id="tx-title"></h3>
+      <span class="path" id="tx-path"><span class="hue-dot" style="width:6px;height:6px;border-radius:2px;background:var(--hue)"></span><span></span></span>
+      <button class="actbtn" id="tx-diffbtn">Edits…</button>
+      <button class="actbtn" id="tx-openbtn" title="Bring this window forward">Open in Antigravity</button>
+    </div>
+
+    <div class="txbody" id="tx-body">
+      <div class="empty-tx">
+        <div class="g"><svg width="30" height="30" viewBox="0 0 16 16" fill="none"><path d="M1.5 8S3.9 3.5 8 3.5 14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8Z" stroke="currentColor" stroke-width="1.1"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.1"/></svg></div>
+        Pick a session on the left to read it.<br>Ctrl+Alt+Space opens the prompt box from anywhere.
+      </div>
+    </div>
+
+    <div class="txfoot" id="tx-foot" style="display:none">
+      <div class="shots" id="tx-shots" style="display:none"></div>
+      <div class="mini">
+        <span class="g"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8h10M8.5 4.5 12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <input type="text" id="tx-input" placeholder="Message —">
+        <button class="winbtn micbtn" id="tx-mic" title="Dictate">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="5.5" y="2" width="5" height="8" rx="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </button>
+        <button class="winbtn" id="tx-popout" title="Open the full prompt box">⤢</button>
+        <button id="tx-sendbtn" title="Send (Enter)"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8h10M8.5 4.5 12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <div class="err" id="tx-err" style="display:none"></div>
+    </div>
+  </section>
+</div>
+
+<!-- edits / diff review -->
+<div class="overlay" id="diff-overlay">
+  <div class="usage" style="width:min(680px,94%)">
+    <div class="u-head"><h4>Edits in this session</h4>
+      <span class="win-label" id="diff-count"></span>
+      <button class="x" id="diff-close">✕</button></div>
+    <div class="filetabs" id="diff-tabs"></div>
+    <div id="diff-view"></div>
+    <div class="setup" id="diff-actions"></div>
+  </div>
+</div>
+
+<!-- usage overlay -->
+<div class="overlay" id="usage-overlay">
+  <div class="usage">
+    <div class="u-head"><h4>Usage</h4><span class="win-label">last 24 hours · all sessions</span><button class="x" id="usage-close">✕</button></div>
+    <div id="plan-box"></div>
+    <div class="u-big">
+      <div class="u-cell"><div class="n" id="u-tokens">—</div><div class="l">Tokens</div></div>
+      <div class="u-cell cost"><div class="n" id="u-cost">—</div><div class="l">Estimated cost</div></div>
+      <div class="u-cell"><div class="n" id="u-touched">—</div><div class="l">Sessions touched</div></div>
+    </div>
+    <div class="u-body">
+      <div class="u-split">
+        <div class="t"><b>Where it went</b><span class="r" id="u-where-total"></span></div>
+        <div class="bar" style="height:6px"><i class="b-out" id="u-b-out"></i><i class="b-cw" id="u-b-cw"></i><i class="b-cr" id="u-b-cr"></i><i class="b-in" id="u-b-in" style="background:rgba(255,255,255,.09)"></i></div>
+        <div class="u-keys">
+          <span><i style="background:var(--acc)"></i>Output <span id="u-k-out"></span></span>
+          <span><i style="background:var(--hue-violet)"></i>Cache writes <span id="u-k-cw"></span></span>
+          <span><i style="background:rgba(255,255,255,.2)"></i>Cache reads <span id="u-k-cr"></span></span>
+          <span><i style="background:rgba(255,255,255,.09)"></i>Input <span id="u-k-in"></span></span>
+        </div>
+      </div>
+      <div class="u-list" id="u-list"></div>
+    </div>
+    <div class="u-note">Counted from transcript records, priced at published per-model rates (cache reads at 0.1x input, cache writes at 1.25x–2x depending on TTL). This shows spend, not remaining plan allowance — no quota or reset time is stored anywhere in <code>~/.claude</code>.</div>
+  </div>
+</div>
+
+<!-- settings -->
+<div class="overlay" id="setup-overlay">
+  <div class="usage" style="width:min(520px,94%)">
+    <div class="u-head"><h4>Settings</h4><button class="x" id="setup-close">✕</button></div>
+    <div class="set-body">
+
+      <div class="set-sec">Appearance</div>
+      <div class="set-row">
+        <span class="lb"><span class="t">Window transparency</span>
+          <span class="d">How much of your desktop shows through. Left is clearer, right is more solid.</span></span>
+        <span class="ctl"><input type="range" id="s-tint" min="0" max="80" step="1"><span class="rangeval" id="s-tint-v"></span></span>
+      </div>
+      <div class="set-row">
+        <span class="lb"><span class="t">Prompt box transparency</span>
+          <span class="d">Same, for the small pop-up prompt window.</span></span>
+        <span class="ctl"><input type="range" id="s-ctint" min="0" max="80" step="1"><span class="rangeval" id="s-ctint-v"></span></span>
+      </div>
+      <div class="set-row">
+        <span class="lb"><span class="t">Window surface</span>
+          <span class="d"><em>Glass</em> lets Windows blur the desktop behind the window — but it obeys Windows' own Transparency effects switch. <em>Clear</em> ignores Windows entirely and gives you exact see-through control, with no blur.</span></span>
+        <span class="ctl seg" id="s-winmode">
+          <button data-v="glass">Glass</button>
+          <button data-v="clear">Clear</button>
+        </span>
+      </div>
+      <div class="set-note" id="s-surface-note"></div>
+      <div class="set-row" id="s-material-row">
+        <span class="lb"><span class="t">Blur style</span>
+          <span class="d">Windows composites this itself and offers only these looks — there's no blur-radius dial to expose.</span></span>
+        <span class="ctl seg" id="s-material">
+          <button data-v="acrylic">Blurred</button>
+          <button data-v="mica">Subtle</button>
+          <button data-v="none">Off</button>
+        </span>
+      </div>
+      <div class="set-row">
+        <span class="lb"><span class="t">Motion</span>
+          <span class="d">Fades and slides when things open or update. <em>Automatic</em> follows Windows' own animation setting — pick <em>On</em> to keep them here even with Windows animations turned off.</span></span>
+        <span class="ctl seg" id="s-anim">
+          <button data-v="auto">Auto</button>
+          <button data-v="on">On</button>
+          <button data-v="off">Off</button>
+        </span>
+      </div>
+      <div class="set-note" id="s-anim-note"></div>
+
+      <div class="set-sec">Prompt box</div>
+      <div class="set-row">
+        <span class="lb"><span class="t">Close when I click elsewhere</span>
+          <span class="d">Off means it stays open while you go look at something. Escape always closes it.</span></span>
+        <span class="ctl"><button class="toggle" id="s-autohide"></button></span>
+      </div>
+
+      <div class="set-sec">Sending</div>
+      <div class="set-row">
+        <span class="lb"><span class="t">Give focus back after sending</span>
+          <span class="d">Windows only delivers keystrokes to the front window, so Antigravity has to surface for a moment. With this on it drops straight back to whatever you were doing, and re-minimises if it started minimised.</span></span>
+        <span class="ctl"><button class="toggle" id="s-returnfocus"></button></span>
+      </div>
+
+      <div class="set-sec">Keyboard shortcuts</div>
+      <div class="set-row">
+        <span class="lb"><span class="t">Open the prompt box</span>
+          <span class="d">Works anywhere, even when Sidecar is hidden.</span></span>
+        <span class="ctl"><button class="hkbtn" id="s-hk-composer"></button></span>
+      </div>
+      <div class="set-row">
+        <span class="lb"><span class="t">Show or hide Sidecar</span>
+          <span class="d">Brings this window up from the tray.</span></span>
+        <span class="ctl"><button class="hkbtn" id="s-hk-main"></button></span>
+      </div>
+      <div class="set-note" id="s-hk-note"></div>
+
+      <div class="set-sec">Updates</div>
+      <div class="set-row">
+        <span class="lb"><span class="t">Version <span id="s-version">—</span></span>
+          <span class="d" id="s-update-note">Sidecar checks GitHub for new versions and asks before downloading anything.</span></span>
+        <span class="ctl"><button class="btn ghost" id="s-checkupdate">Check now</button></span>
+      </div>
+
+      <div class="set-sec">Sending &amp; approving</div>
+      <div class="setup" id="setup-body"></div>
+
+    </div>
+  </div>
+</div>
+
+<script src="motion.js"></script>
+<script src="dictation.js"></script>
+<script src="marquee.js"></script>
+<script src="renderer.js"></script>
+</body>
+</html>

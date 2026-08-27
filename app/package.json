@@ -1,0 +1,70 @@
+{
+  "name": "sidecar",
+  "version": "0.1.0",
+  "description": "A translucent companion for the Claude Code sessions open in your editor — read them, answer them, and send prompts without switching windows.",
+  "author": {
+    "name": "stridefr"
+  },
+  "license": "MIT",
+  "private": false,
+  "main": "main.js",
+  "homepage": "https://github.com/stridefr/sidecar",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stridefr/sidecar.git"
+  },
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win --publish never",
+    "release": "electron-builder --win --publish always"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  },
+  "devDependencies": {
+    "electron": "^44.0.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "dev.stridefr.sidecar",
+    "productName": "Sidecar",
+    "copyright": "Copyright © 2026 stridefr",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "lib/**/*",
+      "renderer/**/*",
+      "assets/**/*",
+      "!**/*.map"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/icon-256.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Sidecar"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "stridefr",
+        "repo": "sidecar"
+      }
+    ]
+  }
+}
