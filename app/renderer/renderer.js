@@ -977,6 +977,13 @@ window.addEventListener('unhandledrejection', (e) => window.__sidecarErrors.push
     onError: (msg) => showSendError(msg),
   });
 
+  // ── slash-command autocomplete in the reader's send bar ──────────────
+  window.SidecarSlash.attach({
+    textarea: $('#tx-input'),
+    insertBefore: $('#tx-foot .mini'),
+    getSessionId: () => state.sendTargetId,
+  });
+
   // ── updates ──────────────────────────────────────────────────────────
   let updateDismissed = false;
 

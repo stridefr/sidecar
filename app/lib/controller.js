@@ -260,6 +260,58 @@ class Controller {
     return { ok: true, content, isMarkdown: /\.(md|markdown)$/i.test(resolved) };
   }
 
+  // Custom slash commands, scanned from the session's *project* .claude
+  // folder — distinct from the user-level ~/.claude used elsewhere in this
+  // file. Same workspace-resolution fallback as readProjectFile, since a
+  // command list is only meaningful relative to that project root.
+  getSlashCommands(sessionId) {
+    const fs = require('fs');
+
+    const g = this._lastGroups.get(sessionId);
+    let root = g && g.workspacePath;
+    if (!root) {
+      try { root = tailScan(sessionId).cwd; } catch (e) { /* fall through */ }
+    }
+    if (!root) return [];
+
+    function parseFrontmatter(text) {
+      const m = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+      const fm = {};
+      if (!m) return fm;
+      for (const line of m[1].split(/\r?\n/)) {
+        const kv = line.match(/^([\w-]+):\s*(.*)$/);
+        if (kv) fm[kv[1]] = kv[2].trim().replace(/^["']|["']$/g, '');
+      }
+      return fm;
+    }
+
+    const out = [];
+
+    const commandsDir = path.join(root, '.claude', 'commands');
+    try {
+      for (const f of fs.readdirSync(commandsDir)) {
+        if (!f.toLowerCase().endsWith('.md')) continue;
+        let fm = {};
+        try { fm = parseFrontmatter(fs.readFileSync(path.join(commandsDir, f), 'utf8')); } catch (e) { /* unreadable — skip frontmatter, keep the name */ }
+        out.push({ name: '/' + f.slice(0, -3), description: fm.description || '', argumentHint: fm['argument-hint'] || '' });
+      }
+    } catch (e) { /* no project-local commands folder */ }
+
+    const skillsDir = path.join(root, '.claude', 'skills');
+    try {
+      for (const entry of fs.readdirSync(skillsDir, { withFileTypes: true })) {
+        if (!entry.isDirectory()) continue;
+        const skillFile = path.join(skillsDir, entry.name, 'SKILL.md');
+        if (!fs.existsSync(skillFile)) continue;
+        let fm = {};
+        try { fm = parseFrontmatter(fs.readFileSync(skillFile, 'utf8')); } catch (e) { /* unreadable — skip frontmatter, keep the name */ }
+        out.push({ name: '/' + entry.name, description: fm.description || '', argumentHint: fm['argument-hint'] || '' });
+      }
+    } catch (e) { /* no project-local skills folder */ }
+
+    return out;
+  }
+
   // Answering a question isn't a special action — it's the same send pipeline
   // as any other prompt, with the picked option's label as the text.
   async answerQuestion({ sessionId, answerText }) {

@@ -27,6 +27,7 @@ contextBridge.exposeInMainWorld('sidecar', {
   setHue: (key, hue) => ipcRenderer.invoke('sessions:setHue', key, hue),
   focusSession: (id) => ipcRenderer.invoke('sessions:focus', id),
   readProjectFile: (id, relPath) => ipcRenderer.invoke('sessions:readFile', str(id), str(relPath)),
+  getSlashCommands: (id) => ipcRenderer.invoke('sessions:slashCommands', str(id)),
   send: (payload) => ipcRenderer.invoke('sessions:send', cleanSendPayload(payload)),
   answerQuestion: (payload) => ipcRenderer.invoke('sessions:answerQuestion', {
     sessionId: str((payload || {}).sessionId), answerText: str((payload || {}).answerText),

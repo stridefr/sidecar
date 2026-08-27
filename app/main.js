@@ -224,6 +224,7 @@ function registerIpc() {
   ipcMain.handle('sessions:setHue', (e, key, hue) => controller.setHue(key, hue));
   ipcMain.handle('sessions:focus', (e, id) => controller.focusSession(id));
   ipcMain.handle('sessions:readFile', (e, id, relPath) => controller.readProjectFile(id, relPath));
+  ipcMain.handle('sessions:slashCommands', (e, id) => controller.getSlashCommands(id));
   ipcMain.handle('sessions:send', (e, payload) => controller.send(payload));
   ipcMain.handle('sessions:answerQuestion', (e, payload) => controller.answerQuestion(payload));
   ipcMain.handle('sessions:edits', (e, id) => controller.getEdits(id));

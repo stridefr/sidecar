@@ -145,6 +145,14 @@ window.addEventListener('unhandledrejection', (e) => window.__sidecarErrors.push
     onError: setError,
   });
 
+  // ── slash-command autocomplete (shared with the main window) ─────────
+  window.SidecarSlash.attach({
+    textarea: $('#ta'),
+    insertBefore: $('#ta'),
+    getSessionId: () => state.targetId,
+    onChange: resize,
+  });
+
   function renderDropRow(s) {
     return `
       <div class="drow" data-id="${escapeHtml(s.id)}">
