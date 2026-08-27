@@ -100,7 +100,13 @@ installer to replace, and Settings says so rather than reporting a fake
 - **Antigravity surfaces briefly when sending.** Windows only delivers
   synthesised keystrokes to the foreground window. Sidecar restores whatever
   was in front afterwards (and re-minimises Antigravity if it started
-  minimised), but it cannot avoid the moment itself.
+  minimised), but it cannot avoid the moment itself. UI Automation was tried
+  as a way around this — Antigravity's chat input does expose a `ValuePattern`
+  over its accessibility tree, but `SetValue()` on it silently no-ops (it's a
+  rich-text control, not a plain text box, and Chromium doesn't wire that
+  pattern through to the DOM for it) even with the automation element given
+  focus directly. There's no known way to deliver text into it without the
+  window actually holding OS focus.
 - **Shift+Enter as "queue"** is inferred from the transcript format, not
   confirmed against the extension. It's labelled `⇧↵ queue?` for that reason.
 - **Dictation** uses the Web Speech API, which is not reliably backed in every
