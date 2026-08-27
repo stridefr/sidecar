@@ -42,12 +42,28 @@ if (dirty) {
   process.exit(1);
 }
 
-// --no-git-tag-version: just edit package.json/package-lock.json, no git ops.
-// Those are npm's job to get right (semver, package-lock sync) — only the
-// git side of `npm version` was broken here.
-sh('npm', ['version', bumpType, '--no-git-tag-version'], APP_DIR);
+// Bumped directly rather than shelling out to `npm version` — on Windows,
+// `execFileSync('npm', ...)` fails with ENOENT because npm is npm.cmd, a
+// batch file, and child_process without shell:true won't resolve it through
+// PATH the way an actual shell would. A plain semver bump is simple enough
+// not to need npm's involvement (or that whole class of problem) at all.
+const pkg = JSON.parse(fs.readFileSync(PKG_PATH, 'utf8'));
+const [maj, min, pat] = pkg.version.split('.').map(Number);
+const bumped = bumpType === 'major' ? [maj + 1, 0, 0]
+  : bumpType === 'minor' ? [maj, min + 1, 0]
+  : [maj, min, pat + 1];
+pkg.version = bumped.join('.');
+fs.writeFileSync(PKG_PATH, JSON.stringify(pkg, null, 2) + '\n');
 
-const version = JSON.parse(fs.readFileSync(PKG_PATH, 'utf8')).version;
+const lockPath = path.join(APP_DIR, 'package-lock.json');
+if (fs.existsSync(lockPath)) {
+  const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+  lock.version = pkg.version;
+  if (lock.packages && lock.packages['']) lock.packages[''].version = pkg.version;
+  fs.writeFileSync(lockPath, JSON.stringify(lock, null, 2) + '\n');
+}
+
+const version = pkg.version;
 const tag = `v${version}`;
 
 console.log(`Bumped to ${version}. Committing and tagging ${tag}...`);
