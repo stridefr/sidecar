@@ -75,12 +75,14 @@ body.no-anim *,body.no-anim *::before,body.no-anim *::after{animation:none!impor
 .titlebar .tb-btn{-webkit-app-region:no-drag}
 /* The wordmark was the only serif anywhere in the app, which is exactly why it
    read as pasted-on. It's the interface font now, sized like a label, with the
-   icon's clay square carrying the identity instead. */
-.titlebar .mark{width:13px;height:13px;border-radius:4px;flex:none;
-  background:var(--acc);position:relative;
-  box-shadow:0 0 0 1px rgba(217,119,87,.28),0 1px 4px rgba(217,119,87,.3)}
-.titlebar .mark::after{content:"";position:absolute;right:2.5px;bottom:2.5px;
-  width:4px;height:4px;border-radius:99px;background:#1A0E08;opacity:.65}
+   Twin Pane mark — the same two-square motif as the app icon — carrying the
+   identity instead. */
+.titlebar .mark{width:15px;height:15px;flex:none;position:relative}
+.titlebar .mark::before,.titlebar .mark::after{content:"";position:absolute;
+  width:11px;height:11px;border-radius:4px}
+.titlebar .mark::before{top:0;left:0;background:#3D4257}
+.titlebar .mark::after{bottom:0;right:0;background:var(--acc);
+  box-shadow:0 1px 3px rgba(217,119,87,.32)}
 .titlebar .brand{font-family:var(--ui);font-size:12px;font-weight:600;color:var(--dim);
   letter-spacing:.035em}
 
@@ -399,6 +401,9 @@ body.no-anim *,body.no-anim *::before,body.no-anim *::after{animation:none!impor
    is active inside it — this warns before that gap can cause a misdelivery. */
 .sharewarn{font-size:11px;color:var(--run);padding:6px 15px;background:rgba(224,163,78,.1);
   border-top:1px solid rgba(224,163,78,.25);animation:slideDown .18s var(--ease)}
+.sendstatus{font-size:11px;padding:0 15px 8px;animation:slideDown .18s var(--ease)}
+.sendstatus.sent{color:var(--wait)}
+.sendstatus.queued{color:var(--run)}
 
 .btn{display:inline-flex;align-items:center;gap:7px;background:var(--acc);color:#1A0E08;
   font-weight:600;font-size:12.5px;border:none;border-radius:7px;padding:7px 12px;

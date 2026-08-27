@@ -489,11 +489,27 @@ window.addEventListener('unhandledrejection', (e) => window.__sidecarErrors.push
     }
   }
 
+  // Confirms a send actually went out, and distinguishes "queued behind the
+  // session's current turn" from "delivered now" — the only way to tell
+  // those apart from here is whether the session looked busy the moment the
+  // send was kicked off.
+  let sendStatusTimer = null;
+  function showSendStatus(wasQueued) {
+    const el = $('#tx-sendstatus');
+    clearTimeout(sendStatusTimer);
+    el.className = 'sendstatus show ' + (wasQueued ? 'queued' : 'sent');
+    el.textContent = wasQueued ? 'Queued — will send once this turn finishes.' : 'Sent.';
+    el.style.display = '';
+    sendStatusTimer = setTimeout(() => { el.style.display = 'none'; }, 3000);
+  }
+
   async function sendInline() {
     const input = $('#tx-input');
     const text = input.value.trim();
     if ((!text && !inlineImages.length) || !state.sendTargetId) return;
     $('#tx-err').style.display = 'none';
+    $('#tx-sendstatus').style.display = 'none';
+    const targetWasRunning = (findSession(state.sendTargetId) || {}).status === 'running';
 
     // Clear immediately so the box is empty the instant you press Enter, the
     // way a chat box should behave. If the send fails the text is put back,
@@ -538,6 +554,7 @@ window.addEventListener('unhandledrejection', (e) => window.__sidecarErrors.push
       input.focus();
       return;
     }
+    showSendStatus(targetWasRunning);
     input.focus();
     setTimeout(refresh, 500);
   }

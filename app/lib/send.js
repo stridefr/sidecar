@@ -159,7 +159,15 @@ Write-Output "sent"
 `;
 }
 
-function runPs(script, timeout = 20000) {
+// SendKeys.SendWait blocks until the *receiving* app has processed the
+// input, not just until Windows delivered it — if Antigravity is busy (mid
+// render, or still finishing a previous turn) that wait can run long. The
+// paste + submit keys fire early in the script, so a slow finish afterwards
+// (restoring focus, PowerShell tearing down its loaded assemblies) can still
+// trip a tight timeout after the message already went through — reported as
+// a failed send that actually shows up in the session. 20s wasn't enough
+// headroom for that tail.
+function runPs(script, timeout = 45000) {
   return new Promise((resolve) => {
     // -STA is required for the clipboard APIs used above.
     execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-STA', '-Command', script],
