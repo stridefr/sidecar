@@ -34,6 +34,32 @@ function shInherit(cmd, args, cwd) {
   execFileSync(cmd, args, { cwd, stdio: 'inherit' });
 }
 
+// `git commit`/`git tag -a` fail outright with no configured identity, which
+// is easy to hit if this is the first time `git` (not `gh`) has ever made a
+// commit on a machine — `gh auth login` doesn't set one. Falls back to the
+// repo's own git history, then a placeholder, rather than making the whole
+// release fail on something this script can just supply.
+function resolveIdentity(cwd) {
+  try {
+    const name = sh('git', ['config', 'user.name'], cwd);
+    const email = sh('git', ['config', 'user.email'], cwd);
+    if (name && email) return null; // already configured — don't override it
+  } catch (e) { /* not configured — fall through */ }
+  try {
+    const last = sh('git', ['log', '-1', '--format=%an <%ae>'], cwd);
+    const m = last.match(/^(.*) <(.*)>$/);
+    if (m) return { name: m[1], email: m[2] };
+  } catch (e) { /* no commits yet either */ }
+  return { name: 'sidecar-release', email: 'release@localhost' };
+}
+
+function gitCommitOrTag(args, cwd, identity) {
+  const withIdentity = identity
+    ? ['-c', `user.name=${identity.name}`, '-c', `user.email=${identity.email}`, ...args]
+    : args;
+  shInherit('git', withIdentity, cwd);
+}
+
 // Refuse to bundle unrelated work into a version-bump commit.
 const dirty = sh('git', ['status', '--porcelain'], REPO_ROOT);
 if (dirty) {
@@ -68,11 +94,14 @@ const tag = `v${version}`;
 
 console.log(`Bumped to ${version}. Committing and tagging ${tag}...`);
 
+const identity = resolveIdentity(REPO_ROOT);
+if (identity) console.log(`(no git identity configured — using ${identity.name} <${identity.email}> for this commit only)`);
+
 shInherit('git', ['add', 'app/package.json', 'app/package-lock.json'], REPO_ROOT);
-shInherit('git', ['commit', '-m', tag], REPO_ROOT);
+gitCommitOrTag(['commit', '-m', tag], REPO_ROOT, identity);
 // -a: annotated. Lightweight tags are silently dropped by `--follow-tags`,
 // which is exactly how the last attempt at this never reached GitHub.
-shInherit('git', ['tag', '-a', tag, '-m', tag], REPO_ROOT);
+gitCommitOrTag(['tag', '-a', tag, '-m', tag], REPO_ROOT, identity);
 shInherit('git', ['push', 'origin', 'HEAD', '--follow-tags'], REPO_ROOT);
 
 console.log(`\nPushed ${tag}. GitHub Actions will build and publish the release:`);
