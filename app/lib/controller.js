@@ -175,9 +175,9 @@ class Controller {
 
     for (const file of files) {
       let stat; try { stat = fs.statSync(file); } catch (e) { continue; }
-      if (stat.mtimeMs < cutoff) continue;
+      if (stat.mtimeMs < cutoff) continue; // cheap pre-filter: file untouched since the window can't have anything in it
       touched++;
-      const usage = fullUsageScan(file);
+      const usage = fullUsageScan(file, cutoff); // scoped to records whose OWN timestamp is in the window
       if (usage.input + usage.output + usage.cacheRead + usage.cacheWrite === 0) continue;
 
       totals.input += usage.input;

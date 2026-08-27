@@ -171,12 +171,31 @@ function tailScan(filePath, depth = 1) {
 // on repeat calls. Only invoked when the usage panel actually needs a number.
 const usageCache = new Map(); // filePath -> {key, usage}
 
-function fullUsageScan(filePath) {
-  const stat = fs.statSync(filePath);
-  const key = `${stat.size}:${stat.mtimeMs}`;
-  const cached = usageCache.get(filePath);
-  if (cached && cached.key === key) return cached.usage;
+// A session file can span days or weeks — a 25MB+ transcript accumulated
+// over a long-running project was not unusual on the machine this was built
+// against. Every usage record carries its own timestamp, so filtering has to
+// happen per-record; filtering by *file* mtime only decides which files are
+// worth opening at all; it says nothing about which of that file's records
+// actually fall in the requested window. Getting this backwards is exactly
+// how "last 5 hours" once reported nine figures of tokens for one session:
+// every record the file had ever accumulated got counted, not just the
+// recent ones.
+function fullUsageScan(filePath, sinceMs = null) {
+  // The unwindowed (whole-file) case is still cached by mtime+size, since it's
+  // used wherever a session's lifetime total is wanted, not a recent slice.
+  if (sinceMs === null) {
+    const stat = fs.statSync(filePath);
+    const key = `${stat.size}:${stat.mtimeMs}`;
+    const cached = usageCache.get(filePath);
+    if (cached && cached.key === key) return cached.usage;
+    const totals = scanUsageRecords(filePath, null);
+    usageCache.set(filePath, { key, usage: totals });
+    return totals;
+  }
+  return scanUsageRecords(filePath, sinceMs);
+}
 
+function scanUsageRecords(filePath, sinceMs) {
   const totals = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, thinking: 0, costUSD: 0 };
   const text = fs.readFileSync(filePath, 'utf8');
   for (const line of text.split('\n')) {
@@ -184,6 +203,10 @@ function fullUsageScan(filePath) {
     let r; try { r = JSON.parse(line); } catch (e) { continue; }
     const u = r.message?.usage;
     if (!u) continue;
+    if (sinceMs !== null) {
+      const ts = r.timestamp ? Date.parse(r.timestamp) : NaN;
+      if (!Number.isFinite(ts) || ts < sinceMs) continue;
+    }
     totals.input += u.input_tokens || 0;
     totals.output += u.output_tokens || 0;
     totals.cacheRead += u.cache_read_input_tokens || 0;
@@ -191,7 +214,6 @@ function fullUsageScan(filePath) {
     totals.thinking += u.output_tokens_details?.thinking_tokens || 0;
     totals.costUSD += costOf(u, r.message?.model);
   }
-  usageCache.set(filePath, { key, usage: totals });
   return totals;
 }
 
