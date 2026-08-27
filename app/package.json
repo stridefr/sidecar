@@ -1,6 +1,6 @@
 {
   "name": "sidecar",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "A translucent companion for the Claude Code sessions open in your editor — read them, answer them, and send prompts without switching windows.",
   "author": {
     "name": "stridefr"
