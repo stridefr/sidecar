@@ -17,7 +17,10 @@
     "start": "electron .",
     "pack": "electron-builder --dir",
     "dist": "electron-builder --win --publish never",
-    "release": "electron-builder --win --publish always"
+    "release": "electron-builder --win --publish always",
+    "release:patch": "npm version patch && git push --follow-tags",
+    "release:minor": "npm version minor && git push --follow-tags",
+    "release:major": "npm version major && git push --follow-tags"
   },
   "dependencies": {
     "electron-updater": "^6.8.9"

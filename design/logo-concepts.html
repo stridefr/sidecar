@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sidecar — Logo Concepts</title>
+<style>
+  :root{
+    --bg:#0B0D14; --card:#12151F; --hair:rgba(255,255,255,.09);
+    --fg:#E8E6E3; --dim:#A5A9BC; --mute:#767B90; --faint:#565C71;
+    --acc:#D97757; --ink:#1A0E08;
+    --ui:"Segoe UI",system-ui,sans-serif; --mono:ui-monospace,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--fg);font-family:var(--ui);margin:0;padding:48px 32px 100px}
+  h1{font-size:28px;font-weight:600;letter-spacing:-.01em}
+  .sub{color:var(--dim);max-width:64ch;margin-top:10px;line-height:1.6}
+  .concept{margin-top:56px;border-top:1px solid var(--hair);padding-top:32px}
+  .concept-head{display:flex;align-items:baseline;gap:14px;margin-bottom:6px}
+  .concept-head .letter{font-family:var(--mono);font-size:13px;color:var(--acc);
+    border:1px solid var(--acc);border-radius:6px;padding:2px 8px}
+  .concept-head h2{font-size:19px;font-weight:600;margin:0}
+  .concept-note{color:var(--mute);font-size:13.5px;max-width:70ch;line-height:1.55;margin-bottom:22px}
+  .row{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-end}
+  .cell{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .cell .cap{font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+  .swatch{display:grid;place-items:center;border-radius:10px}
+  .on-dark{background:#0B0D14;border:1px solid var(--hair)}
+  .on-light{background:#EDEBE6}
+  .on-taskbar{background:#1F1F26;border:1px solid rgba(255,255,255,.08)}
+  svg{display:block}
+</style>
+</head>
+<body>
+
+<h1>Sidecar — icon concepts</h1>
+<p class="sub">Four directions, each rendered at the sizes that actually matter — 256 for the
+  installer/about box, down to 16 for the tray, and once against a light desktop since tray icons
+  don't always sit on dark.</p>
+
+<!-- ============ A ============ -->
+<div class="concept">
+  <div class="concept-head"><span class="letter">A</span><h2>Dock</h2></div>
+  <p class="concept-note">The literal meaning of "sidecar" in software: a small process attached to
+    a bigger one it doesn't own. An outlined square stands for Antigravity — present, but not
+    Sidecar's to fill — with a solid clay square docked at its corner, slightly overlapping. It's
+    the only concept of the four that says what the app <em>is</em> rather than just what color it is.</p>
+  <div class="row">
+    <div class="cell"><div class="swatch on-dark" style="width:280px;height:280px">
+      <svg width="220" height="220" viewBox="0 0 100 100">
+        <rect x="10" y="10" width="62" height="62" rx="16" fill="none" stroke="#8B8FA3" stroke-width="4"/>
+        <rect x="46" y="46" width="46" height="46" rx="12" fill="#D97757"/>
+      </svg></div><span class="cap">256 · on-dark</span></div>
+    <div class="cell"><div class="swatch on-light" style="width:200px;height:200px">
+      <svg width="150" height="150" viewBox="0 0 100 100">
+        <rect x="10" y="10" width="62" height="62" rx="16" fill="none" stroke="#8A8578" stroke-width="4"/>
+        <rect x="46" y="46" width="46" height="46" rx="12" fill="#D97757"/>
+      </svg></div><span class="cap">128 · on-light</span></div>
+    <div class="cell"><div class="swatch on-taskbar" style="width:96px;height:96px">
+      <svg width="64" height="64" viewBox="0 0 100 100">
+        <rect x="10" y="10" width="62" height="62" rx="16" fill="none" stroke="#8B8FA3" stroke-width="5"/>
+        <rect x="46" y="46" width="46" height="46" rx="13" fill="#D97757"/>
+      </svg></div><span class="cap">64 · tray-ish</span></div>
+    <div class="cell"><div class="swatch on-taskbar" style="width:56px;height:56px">
+      <svg width="32" height="32" viewBox="0 0 100 100">
+        <rect x="10" y="10" width="62" height="62" rx="16" fill="none" stroke="#8B8FA3" stroke-width="6"/>
+        <rect x="46" y="46" width="46" height="46" rx="14" fill="#D97757"/>
+      </svg></div><span class="cap">32</span></div>
+    <div class="cell"><div class="swatch on-taskbar" style="width:40px;height:40px">
+      <svg width="16" height="16" viewBox="0 0 100 100">
+        <rect x="8" y="8" width="64" height="64" rx="18" fill="none" stroke="#B0B4C2" stroke-width="8"/>
+        <rect x="46" y="46" width="46" height="46" rx="14" fill="#D97757"/>
+      </svg></div><span class="cap">16 · tray</span></div>
+  </div>
+</div>
+
+<!-- ============ B ============ -->
+<div class="concept">
+  <div class="concept-head"><span class="letter">B</span><h2>Twin Pane</h2></div>
+  <p class="concept-note">Two overlapping rounded panes of near-equal size — a nod to the app's real
+    duality (reading one session, sending to another) rather than the host/guest relationship of A.
+    Reads a little more like a generic "windows" or "layers" icon at small sizes, which is the
+    trade-off against A's specificity.</p>
+  <div class="row">
+    <div class="cell"><div class="swatch on-dark" style="width:280px;height:280px">
+      <svg width="220" height="220" viewBox="0 0 100 100">
+        <rect x="12" y="22" width="54" height="54" rx="14" fill="#2A2E3D" stroke="#565C71" stroke-width="2.5"/>
+        <rect x="34" y="24" width="54" height="54" rx="14" fill="#D97757"/>
+      </svg></div><span class="cap">256 · on-dark</span></div>
+    <div class="cell"><div class="swatch on-light" style="width:200px;height:200px">
+      <svg width="150" height="150" viewBox="0 0 100 100">
+        <rect x="12" y="22" width="54" height="54" rx="14" fill="#DAD6CC" stroke="#B4AE9E" stroke-width="2.5"/>
+        <rect x="34" y="24" width="54" height="54" rx="14" fill="#D97757"/>
+      </svg></div><span class="cap">128 · on-light</span></div>
+    <div class="cell"><div class="swatch on-taskbar" style="width:96px;height:96px">
+      <svg width="64" height="64" viewBox="0 0 100 100">
+        <rect x="12" y="22" width="54" height="54" rx="14" fill="#2A2E3D"/>
+        <rect x="34" y="24" width="54" height="54" rx="14" fill="#D97757"/>
+      </svg></div><span class="cap">64</span></div>
+    <div class="cell"><div class="swatch on-taskbar" style="width:56px;height:56px">
+      <svg width="32" height="32" viewBox="0 0 100 100">
+        <rect x="12" y="22" width="54" height="54" rx="14" fill="#2A2E3D"/>
+        <rect x="34" y="24" width="54" height="54" rx="14" fill="#D97757"/>
+      </svg></div><span class="cap">32</span></div>
+    <div class="cell"><div class="swatch on-taskbar" style="width:40px;height:40px">
+      <svg width="16" height="16" viewBox="0 0 100 100">
+        <rect x="10" y="20" width="56" height="56" rx="15" fill="#3A3F52"/>
+        <rect x="34" y="24" width="56" height="56" rx="15" fill="#D97757"/>
+      </svg></div><span class="cap">16 · tray</span></div>
+  </div>
+</div>
+
+<!-- ============ C ============ -->
+<div class="concept">
+  <div class="concept-head"><span class="letter">C</span><h2>Mark (current, refined)</h2></div>
+  <p class="concept-note">Keeps what's already working — a single solid clay square is legible and
+    calm at every size — but replaces the dark corner dot with a small notch cut from the corner,
+    like a bite taken out where a companion window would dock. Cheapest change from what's shipping
+    now, and the least distinctive of the four.</p>
+  <div class="row">
+    <div class="cell"><div class="swatch on-dark" style="width:280px;height:280px">
+      <svg width="220" height="220" viewBox="0 0 100 100">
+        <path d="M22 10h56a12 12 0 0 1 12 12v40a12 12 0 0 1-12 12H60L48 90V74H22a12 12 0 0 1-12-12V22a12 12 0 0 1 12-12z" fill="#D97757"/>
+      </svg></div><span class="cap">256 · on-dark</span></div>
+    <div class="cell"><div class="swatch on-light" style="width:200px;height:200px">
+      <svg width="150" height="150" viewBox="0 0 100 100">
+        <path d="M22 10h56a12 12 0 0 1 12 12v40a12 12 0 0 1-12 12H60L48 90V74H22a12 12 0 0 1-12-12V22a12 12 0 0 1 12-12z" fill="#D97757"/>
+      </svg></div><span class="cap">128 · on-light</span></div>
+    <div class="cell"><div class="swatch on-taskbar" style="width:96px;height:96px">
+      <svg width="64" height="64" viewBox="0 0 100 100">
+        <path d="M22 10h56a12 12 0 0 1 12 12v40a12 12 0 0 1-12 12H60L48 90V74H22a12 12 0 0 1-12-12V22a12 12 0 0 1 12-12z" fill="#D97757"/>
+      </svg></div><span class="cap">64</span></div>
+    <div class="cell"><div class="swatch on-taskbar" style="width:56px;height:56px">
+      <svg width="32" height="32" viewBox="0 0 100 100">
+        <path d="M20 8h58a14 14 0 0 1 14 14v38a14 14 0 0 1-14 14H62L48 92V74H20A14 14 0 0 1 6 60V22A14 14 0 0 1 20 8z" fill="#D97757"/>
+      </svg></div><span class="cap">32</span></div>
+    <div class="cell"><div class="swatch on-taskbar" style="width:40px;height:40px">
+      <svg width="16" height="16" viewBox="0 0 100 100">
+        <rect x="8" y="8" width="64" height="64" rx="18" fill="#D97757"/>
+      </svg></div><span class="cap">16 · tray (notch lost at this size — falls back to plain square)</span></div>
+  </div>
+</div>
+
+<!-- ============ D ============ -->
+<div class="concept">
+  <div class="concept-head"><span class="letter">D</span><h2>Read / Send</h2></div>
+  <p class="concept-note">Built from the app's own vocabulary — the eye and arrow marks used
+    throughout the UI for "what you're reading" and "what you're sending to." An arrow crosses in
+    front of a simplified eye. The most literal tie to the product, but eyes are notoriously hard to
+    keep legible under about 24px — worth seeing fail before ruling it out.</p>
+  <div class="row">
+    <div class="cell"><div class="swatch on-dark" style="width:280px;height:280px">
+      <svg width="220" height="220" viewBox="0 0 100 100">
+        <rect x="6" y="6" width="88" height="88" rx="20" fill="#1B1E29"/>
+        <path d="M18 50S30 30 50 30 82 50 82 50 70 70 50 70 18 50 18 50Z" fill="none" stroke="#D97757" stroke-width="5"/>
+        <circle cx="50" cy="50" r="9" fill="#D97757"/>
+        <path d="M52 50h30M74 40l12 10-12 10" stroke="#E8E6E3" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg></div><span class="cap">256 · on-dark</span></div>
+    <div class="cell"><div class="swatch on-light" style="width:200px;height:200px">
+      <svg width="150" height="150" viewBox="0 0 100 100">
+        <rect x="6" y="6" width="88" height="88" rx="20" fill="#EDEBE6"/>
+        <path d="M18 50S30 30 50 30 82 50 82 50 70 70 50 70 18 50 18 50Z" fill="none" stroke="#D97757" stroke-width="5"/>
+        <circle cx="50" cy="50" r="9" fill="#D97757"/>
+        <path d="M52 50h30M74 40l12 10-12 10" stroke="#3A342C" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg></div><span class="cap">128 · on-light</span></div>
+    <div class="cell"><div class="swatch on-taskbar" style="width:96px;height:96px">
+      <svg width="64" height="64" viewBox="0 0 100 100">
+        <rect x="6" y="6" width="88" height="88" rx="20" fill="#1B1E29"/>
+        <path d="M18 50S30 30 50 30 82 50 82 50 70 70 50 70 18 50 18 50Z" fill="none" stroke="#D97757" stroke-width="6"/>
+        <circle cx="50" cy="50" r="9" fill="#D97757"/>
+        <path d="M52 50h30M74 40l12 10-12 10" stroke="#E8E6E3" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg></div><span class="cap">64</span></div>
+    <div class="cell"><div class="swatch on-taskbar" style="width:56px;height:56px">
+      <svg width="32" height="32" viewBox="0 0 100 100">
+        <rect x="6" y="6" width="88" height="88" rx="20" fill="#1B1E29"/>
+        <path d="M18 50S30 32 50 32 82 50 82 50 70 68 50 68 18 50 18 50Z" fill="none" stroke="#D97757" stroke-width="7"/>
+        <circle cx="50" cy="50" r="10" fill="#D97757"/>
+      </svg></div><span class="cap">32 · arrow already dropped</span></div>
+    <div class="cell"><div class="swatch on-taskbar" style="width:40px;height:40px">
+      <svg width="16" height="16" viewBox="0 0 100 100">
+        <rect x="8" y="8" width="84" height="84" rx="22" fill="#1B1E29"/>
+        <circle cx="50" cy="50" r="16" fill="#D97757"/>
+      </svg></div><span class="cap">16 · collapses to a dot — the concept doesn't survive tray size</span></div>
+  </div>
+</div>
+
+<div class="concept" style="border-top:1px solid var(--hair)">
+  <div class="concept-head"><span class="letter">→</span><h2>Recommendation</h2></div>
+  <p class="concept-note" style="color:var(--dim)">
+    <b style="color:var(--fg)">A — Dock.</b> It's the only one that survives all five sizes without
+    losing its idea, it's built from two shapes already in the palette (no new color needed), and
+    it's the one genuinely distinctive choice — it says "attached to something else" rather than
+    just being a colored square, which is what C already is and D degrades into anyway at 16px.
+    B is a reasonable second if you'd rather emphasize the read/send duality over the host/guest one.
+  </p>
+</div>
+
+</body>
+</html>

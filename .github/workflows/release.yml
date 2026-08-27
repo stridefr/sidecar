@@ -1,0 +1,47 @@
+name: Release
+
+# Fires on any tag matching v*.*.* — the trigger is the tag, not the commit,
+# so "bump the version" and "publish a build" are the same action: tag it and
+# push. electron-builder --publish always uploads the installer and
+# latest.yml straight onto the matching GitHub Release, which is what
+# electron-updater checks against.
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify tag matches package.json version
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG=$(node -p "require('./package.json').version")
+          if [ "$TAG" != "$PKG" ]; then
+            echo "Tag v$TAG does not match app/package.json version $PKG — refusing to publish a mismatched build."
+            exit 1
+          fi
+
+      - name: Build and publish
+        run: npm run release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -59,15 +59,28 @@ cd app
 npm run dist        # builds dist/Sidecar Setup <version>.exe, publishes nothing
 ```
 
-To cut a release that the auto-updater can see:
+Releases are built by CI, not by hand. Pushing a `v*.*.*` tag is what triggers
+a build — that's the whole mechanism, so bumping the version *is* cutting the
+release:
 
-1. Bump `version` in `app/package.json`.
-2. `export GH_TOKEN=<a token with repo scope>`
-3. `npm run release`
+```bash
+cd app
+npm run release:patch    # or release:minor / release:major
+```
 
-That uploads the installer and a `latest.yml` manifest to a GitHub Release.
+That runs `npm version`, which bumps `package.json`, commits, tags `vX.Y.Z`,
+and pushes both. [`.github/workflows/release.yml`](.github/workflows/release.yml)
+sees the tag, builds the Windows installer on a GitHub-hosted runner, and
+uploads it plus a `latest.yml` manifest to a matching GitHub Release —
+publicly visible under [Releases](https://github.com/stridefr/sidecar/releases)
+the moment it finishes. It also refuses to publish if the tag and
+`package.json`'s version ever disagree.
+
 Installed copies check on launch and then daily, show a banner when a new
 version appears, and **never download without asking**.
+
+`npm run dist` still exists for a local build with nothing published — useful
+for testing packaging changes without creating a public release.
 
 Auto-update only works in a packaged build — running from source there is no
 installer to replace, and Settings says so rather than reporting a fake
