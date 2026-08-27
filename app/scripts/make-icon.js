@@ -1,5 +1,7 @@
-// Minimal PNG encoder (no deps) — draws a rounded clay square with a small
-// dot, used as the tray/window icon. Just enough PNG to satisfy Electron.
+// Minimal PNG encoder (no deps) — draws the "Twin Pane" mark: two overlapping
+// rounded squares, a cool slate one behind a clay one, echoing the app's own
+// duality (reading one session, sending to another) rather than being just a
+// single colored square. Just enough PNG to satisfy Electron.
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
@@ -57,28 +59,34 @@ function hex(h) {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
+// Point-in-rounded-rect test, in a normalized 0–100 design space so the same
+// logic works at any output size.
+function insideRoundedRect(px, py, rx, ry, rw, rh, rr) {
+  if (px < rx || px > rx + rw || py < ry || py > ry + rh) return false;
+  const inXBand = px >= rx + rr && px <= rx + rw - rr;
+  const inYBand = py >= ry + rr && py <= ry + rh - rr;
+  if (inXBand || inYBand) return true;
+  const cx = px < rx + rr ? rx + rr : rx + rw - rr;
+  const cy = py < ry + rr ? ry + rr : ry + rh - rr;
+  const dx = px - cx, dy = py - cy;
+  return dx * dx + dy * dy <= rr * rr;
+}
+
 function drawIcon(size) {
-  const [cr, cg, cb] = hex('#D97757');
-  const [dr, dg, db] = hex('#1A0E08');
-  const r = size * 0.22; // corner radius
+  const [cr, cg, cb] = hex('#D97757');   // clay — front pane
+  const [br, bg, bb] = hex('#3D4257');   // slate — back pane
+
+  // back pane: upper-left-biased. front pane: lower-right-biased, drawn on
+  // top so the overlap resolves to clay. Sized so both stay legible once the
+  // whole thing shrinks to a 16px tray icon.
+  const back  = { x: 8,  y: 16, w: 56, h: 56, r: 15 };
+  const front = { x: 34, y: 26, w: 58, h: 58, r: 15 };
+
   return (x, y) => {
-    // rounded-square mask
-    const inCorner = (cx, cy) => {
-      const dx = x - cx, dy = y - cy;
-      return dx * dx + dy * dy <= r * r;
-    };
-    let inside = x >= r && x <= size - r || y >= r && y <= size - r;
-    if (!inside) {
-      inside = inCorner(r, r) || inCorner(size - r, r) || inCorner(r, size - r) || inCorner(size - r, size - r);
-    }
-    if (!inside) return [0, 0, 0, 0];
-
-    // small dark dot in the lower-right third, echoing the "send" glyph
-    const dotCx = size * 0.68, dotCy = size * 0.68, dotR = size * 0.1;
-    const ddx = x - dotCx, ddy = y - dotCy;
-    if (ddx * ddx + ddy * ddy <= dotR * dotR) return [dr, dg, db, 255];
-
-    return [cr, cg, cb, 255];
+    const px = (x / size) * 100, py = (y / size) * 100;
+    if (insideRoundedRect(px, py, front.x, front.y, front.w, front.h, front.r)) return [cr, cg, cb, 255];
+    if (insideRoundedRect(px, py, back.x, back.y, back.w, back.h, back.r)) return [br, bg, bb, 255];
+    return [0, 0, 0, 0];
   };
 }
 
