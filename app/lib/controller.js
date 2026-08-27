@@ -218,6 +218,48 @@ class Controller {
     return focusOnly(g.pid, g.workspacePath);
   }
 
+  // A relative markdown link in a transcript ([docs/x.md](docs/x.md)) is
+  // rooted at the project folder, not wherever a stray Bash command last
+  // `cd`'d to — so this resolves against the *window's* workspace, the same
+  // ground truth used for sending, and refuses anything that resolves
+  // outside it. `path.relative` starting with '..' is the escape signal,
+  // and it catches an absolute path handed in place of a relative one too,
+  // since path.resolve(root, absolutePath) just returns that absolute path
+  // unchanged — which then legitimately fails the same containment check.
+  readProjectFile(sessionId, relPath) {
+    const path = require('path');
+    const fs = require('fs');
+
+    const g = this._lastGroups.get(sessionId);
+    let root = g && g.workspacePath;
+    if (!root) {
+      try { root = tailScan(sessionId).cwd; } catch (e) { /* fall through */ }
+    }
+    if (!root) return { ok: false, error: "Could not determine this session's project folder." };
+
+    const normalizedRoot = path.resolve(root);
+    const resolved = path.resolve(normalizedRoot, relPath);
+    const rel = path.relative(normalizedRoot, resolved);
+    if (rel.startsWith('..') || path.isAbsolute(rel)) {
+      return { ok: false, error: 'That link points outside the project folder — refusing to open it.' };
+    }
+
+    let stat;
+    try { stat = fs.statSync(resolved); } catch (e) { return { ok: false, error: `File not found: ${relPath}` }; }
+    if (!stat.isFile()) return { ok: false, error: 'That path is not a file.' };
+
+    const MAX_BYTES = 2 * 1024 * 1024;
+    if (stat.size > MAX_BYTES) {
+      return { ok: false, error: `Too large to preview (${(stat.size / 1024 / 1024).toFixed(1)} MB) — open it in your editor instead.` };
+    }
+
+    let content;
+    try { content = fs.readFileSync(resolved, 'utf8'); }
+    catch (e) { return { ok: false, error: 'Could not read that file (it may not be text).' }; }
+
+    return { ok: true, content, isMarkdown: /\.(md|markdown)$/i.test(resolved) };
+  }
+
   // Answering a question isn't a special action — it's the same send pipeline
   // as any other prompt, with the picked option's label as the text.
   async answerQuestion({ sessionId, answerText }) {

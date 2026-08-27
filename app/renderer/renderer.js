@@ -40,6 +40,10 @@ window.addEventListener('unhandledrejection', (e) => window.__sidecarErrors.push
         `<a href="#" class="md-link" data-href="${url}">${text}</a>`)
       .replace(/(^|[\s(])(https?:\/\/[^\s<]+)/g, (m, pre, url) =>
         `${pre}<a href="#" class="md-link" data-href="${url}">${url}</a>`)
+      // [text](docs/file.md) — a relative path, not a URL. Opens in the side
+      // panel instead of a browser: it's a file in the project, not the web.
+      .replace(/\[([^\]\n]+)\]\((?!https?:\/\/)([^\s)]+)\)/g, (m, text, relPath) =>
+        `<a href="#" class="md-link md-file-link" data-path="${relPath}">${text}</a>`)
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
       .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,!?;:]|$)/g, '$1<em>$2</em>')
       .replace(/(^|[\s(])_([^_\n]+)_(?=[\s).,!?;:]|$)/g, '$1<em>$2</em>');
@@ -1072,6 +1076,28 @@ window.addEventListener('unhandledrejection', (e) => window.__sidecarErrors.push
     if (window.sidecar.signalReady) window.sidecar.signalReady();
   })();
 
+  // ── file side panel ──────────────────────────────────────────────────
+  // A relative markdown link ([docs/x.md](docs/x.md)) points into the
+  // project on disk, not the web — this reads it and renders it in place
+  // rather than shelling out to a browser for a file that isn't a URL.
+  async function openFilePanel(relPath) {
+    const panel = $('#filepanel');
+    const body = $('#filepanel-body');
+    const title = $('#filepanel-title');
+    title.textContent = relPath;
+    body.innerHTML = `<div class="empty-tx" style="margin-top:40px">Loading…</div>`;
+    panel.classList.add('show');
+
+    const r = await window.sidecar.readProjectFile(state.readingId, relPath);
+    if (state.readingId === null) return; // panel closed / session changed mid-load
+    if (!r.ok) {
+      body.innerHTML = `<div class="empty-tx" style="margin-top:40px">${escapeHtml(r.error)}</div>`;
+      return;
+    }
+    body.innerHTML = r.isMarkdown ? renderMarkdown(r.content) : `<pre class="md-pre" style="white-space:pre-wrap">${escapeHtml(r.content)}</pre>`;
+  }
+  $('#filepanel-close').addEventListener('click', () => $('#filepanel').classList.remove('show'));
+
   // Delegated once, since the transcript body is rebuilt wholesale on every
   // update — a listener attached to individual links would be gone the next
   // time renderTranscript() runs.
@@ -1079,7 +1105,8 @@ window.addEventListener('unhandledrejection', (e) => window.__sidecarErrors.push
     const a = e.target.closest('.md-link');
     if (!a) return;
     e.preventDefault();
-    window.sidecar.openExternal(a.dataset.href);
+    if (a.classList.contains('md-file-link')) openFilePanel(a.dataset.path);
+    else window.sidecar.openExternal(a.dataset.href);
   });
 
   window.sidecar.onSessionsChanged(refresh);

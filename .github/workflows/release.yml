@@ -2,9 +2,8 @@ name: Release
 
 # Fires on any tag matching v*.*.* — the trigger is the tag, not the commit,
 # so "bump the version" and "publish a build" are the same action: tag it and
-# push. electron-builder --publish always uploads the installer and
-# latest.yml straight onto the matching GitHub Release, which is what
-# electron-updater checks against.
+# push. The installer and latest.yml (electron-updater's manifest) end up on
+# the matching GitHub Release.
 on:
   push:
     tags:
@@ -41,16 +40,39 @@ jobs:
             exit 1
           fi
 
-      - name: Build and publish
-        run: npm run release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Build only — no publishing here. electron-builder's own GitHub
+      # uploader silently dropped the .exe and latest.yml on two consecutive
+      # releases (v0.1.5, v0.1.6): the tiny .blockmap always landed, the
+      # 106MB installer and the manifest never did, with no error anywhere
+      # in its log and a successful (0) exit code regardless. `npm run dist`
+      # (this exact command) produced correct local artifacts on every one
+      # of those runs — it's specifically electron-builder's uploader that's
+      # unreliable for a file this size on a GitHub-hosted runner, not the
+      # build itself.
+      - name: Build
+        run: npm run dist
 
-      # electron-builder can exit 0 having silently dropped an upload — v0.1.5
-      # "succeeded" here with only the .blockmap on the release, no installer
-      # and no latest.yml, which is exactly what electron-updater needs. Treat
-      # that as the real failure it is instead of letting a green check mark
-      # a broken release.
+      - name: List build artifacts
+        shell: bash
+        run: ls -la dist/
+
+      # Uploading is handed to a purpose-built, widely-used action instead —
+      # it retries and reports failures properly, which is exactly what was
+      # missing.
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          draft: false
+          fail_on_unmatched_files: true
+          files: |
+            app/dist/*.exe
+            app/dist/*.exe.blockmap
+            app/dist/latest.yml
+
+      # Belt-and-suspenders: confirm what actually landed, since this exact
+      # class of "green build, broken release" is what caused this rewrite.
       - name: Verify the release actually has its assets
         shell: bash
         run: |
