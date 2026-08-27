@@ -91,6 +91,16 @@ function createComposerWindow() {
   }
 }
 
+// Remembers the composer's last-measured content height so it can be applied
+// *before* the window is ever shown, rather than showing it small and then
+// visibly resizing to fit.
+let composerReadyHeight = null;
+function showComposer() {
+  if (composerReadyHeight) setComposerHeight(composerReadyHeight, false);
+  composerWindow.show();
+  composerWindow.focus();
+}
+
 function toggleComposer() {
   if (!composerWindow || composerWindow.isDestroyed()) createComposerWindow();
   if (composerWindow.isVisible()) { composerWindow.hide(); return; }
