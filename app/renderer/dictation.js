@@ -1,11 +1,15 @@
 // Speech-to-text, shared by the pop-up prompt box and the main window's
 // reader input.
 //
-// This uses the Web Speech API, which is present in Electron's Chromium but
-// is not guaranteed to have a working backend — some builds expose the object
-// and then fail on start. So this never pretends: if the API is missing or
-// errors, the button is disabled or the failure is reported, with Win+H named
-// as the fallback that always works on Windows.
+// This uses the Web Speech API — and in Electron, that API's 'network' error
+// is not a flaky connection to retry. Chromium's built-in speech recognition
+// calls a Google endpoint that requires a private API key baked into official
+// Google Chrome; Electron's bundled Chromium doesn't have one, so every
+// attempt fails the same way regardless of whether the machine is online.
+// It's a permanent limitation of this approach, not an intermittent fault —
+// so the button disables itself after the first one rather than inviting
+// another try that cannot succeed, and Win+H (Windows' own dictation, which
+// doesn't go through this API at all) is named as the real fallback.
 (function () {
   const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
 

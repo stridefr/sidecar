@@ -18,9 +18,9 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder --win --publish never",
     "release": "electron-builder --win --publish always",
-    "release:patch": "npm version patch && git push --follow-tags",
-    "release:minor": "npm version minor && git push --follow-tags",
-    "release:major": "npm version major && git push --follow-tags"
+    "release:patch": "node scripts/cut-release.js patch",
+    "release:minor": "node scripts/cut-release.js minor",
+    "release:major": "node scripts/cut-release.js major"
   },
   "dependencies": {
     "electron-updater": "^6.8.9"
@@ -67,6 +67,7 @@
     "publish": [
       {
         "provider": "github",
+        "releaseType": "release",
         "owner": "stridefr",
         "repo": "sidecar"
       }

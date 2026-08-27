@@ -25,11 +25,19 @@ window.addEventListener('unhandledrejection', (e) => window.__sidecarErrors.push
     el.style.display = ''; el.textContent = msg;
   }
 
-  function setTarget(id, title, hue, status) {
+  function setTarget(id, title, hue, status, sharesWindowWith) {
     state.targetId = id; state.targetTitle = title || ''; state.targetHue = hue || 'violet'; state.targetStatus = status;
     const nameEl = $('#c-name');
     nameEl.style.setProperty('--hue', HUE_VAR(hue));
     $('#c-name-text').textContent = id ? title : 'No open session';
+
+    const warn = $('#c-sharewarn');
+    if (id && sharesWindowWith > 0) {
+      warn.style.display = '';
+      warn.textContent = `⚠ ${sharesWindowWith} other session${sharesWindowWith === 1 ? '' : 's'} share this window — make sure "${title}" is the active tab in Antigravity first.`;
+    } else {
+      warn.style.display = 'none';
+    }
 
     const subEl = $('#c-sub');
     subEl.innerHTML = ''; // drop any previous marquee wrap before re-wrapping fresh text
@@ -59,7 +67,7 @@ window.addEventListener('unhandledrejection', (e) => window.__sidecarErrors.push
     if (state.targetId) return; // already set (e.g. via composer:setTarget)
     const flat = await loadSessions();
     const def = pickDefaultTarget(flat);
-    if (def) setTarget(def.id, def.title, def.hue, def.status);
+    if (def) setTarget(def.id, def.title, def.hue, def.status, def.sharesWindowWith);
     else setTarget(null, '', 'violet', null);
   }
 
@@ -72,7 +80,7 @@ window.addEventListener('unhandledrejection', (e) => window.__sidecarErrors.push
     document.querySelectorAll('.drow[data-id]').forEach((row) => {
       row.addEventListener('click', () => {
         const s = state.sessions.find((x) => x.id === row.dataset.id);
-        if (s) setTarget(s.id, s.title, s.hue, s.status);
+        if (s) setTarget(s.id, s.title, s.hue, s.status, s.sharesWindowWith);
         closeDropdown();
       });
     });
@@ -221,7 +229,7 @@ window.addEventListener('unhandledrejection', (e) => window.__sidecarErrors.push
 
   // ── wiring from main process ─────────────────────────────────────────
   window.sidecar.onComposerSetTarget((payload) => {
-    setTarget(payload.id, payload.title, payload.hue, null);
+    setTarget(payload.id, payload.title, payload.hue, null, payload.sharesWindowWith);
   });
   window.sidecar.onComposerReset(async () => {
     setError(null);

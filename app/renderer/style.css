@@ -253,6 +253,9 @@ body.no-anim *,body.no-anim *::before,body.no-anim *::after{animation:none!impor
 .md-li .md-b{color:var(--acc);font-family:var(--mono);font-size:11px;text-align:right}
 .turn strong{color:var(--fg);font-weight:650}
 .turn em{font-style:italic}
+.md-link{color:var(--acc);text-decoration:underline;text-underline-offset:2px;
+  text-decoration-color:var(--acc-line);cursor:pointer}
+.md-link:hover{text-decoration-color:var(--acc)}
 .turn code{font-family:var(--mono);font-size:12.5px;color:var(--fg);
   background:rgba(255,255,255,.07);padding:1px 5px;border-radius:4px;
   box-shadow:inset 0 0 0 1px var(--hair2)}
@@ -364,17 +367,26 @@ body.no-anim *,body.no-anim *::before,body.no-anim *::after{animation:none!impor
 
 .txfoot{flex:none;border-top:1px solid var(--hair2);
   background:linear-gradient(transparent,var(--acc-soft))}
-.txfoot .mini{display:flex;align-items:center;gap:9px;padding:10px 15px;min-width:0}
-.txfoot .mini .g{color:var(--acc);display:grid;place-items:center;flex:none}
-.txfoot .mini input{flex:1;min-width:0;background:none;border:none;color:var(--fg);
-  font-family:var(--ui);font-size:13.5px;outline:none}
-.txfoot .mini input::placeholder{color:var(--faint)}
-.txfoot .mini input:disabled{color:var(--faint)}
+.txfoot .mini{display:flex;align-items:flex-end;gap:9px;padding:10px 15px;min-width:0}
+.txfoot .mini .g{color:var(--acc);display:grid;place-items:center;flex:none;
+  align-self:center;height:22px}
+/* was a single-line <input> that scrolled horizontally instead of wrapping —
+   a growing textarea, capped before it eats the whole window, with a plain
+   scrollbar past that cap. */
+.txfoot .mini textarea{flex:1;min-width:0;background:none;border:none;color:var(--fg);
+  font-family:var(--ui);font-size:13.5px;line-height:1.45;outline:none;resize:none;
+  padding:2px 0;max-height:140px;overflow-y:auto}
+.txfoot .mini textarea::placeholder{color:var(--faint)}
+.txfoot .mini textarea:disabled{color:var(--faint)}
 .txfoot .mini button{background:none;border:none;color:var(--faint);display:grid;place-items:center;
   width:24px;height:24px;border-radius:6px;flex:none}
 .txfoot .mini button:hover{color:var(--fg);background:rgba(255,255,255,.06)}
 .txfoot .mini #tx-sendbtn{color:var(--acc)}
 .err{font-size:11px;color:var(--del);padding:0 15px 8px}
+/* Sidecar can bring the right window forward but not pick which session tab
+   is active inside it — this warns before that gap can cause a misdelivery. */
+.sharewarn{font-size:11px;color:var(--run);padding:6px 15px;background:rgba(224,163,78,.1);
+  border-top:1px solid rgba(224,163,78,.25);animation:slideDown .18s var(--ease)}
 
 .btn{display:inline-flex;align-items:center;gap:7px;background:var(--acc);color:#1A0E08;
   font-weight:600;font-size:12.5px;border:none;border-radius:7px;padding:7px 12px;

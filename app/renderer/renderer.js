@@ -29,9 +29,17 @@ window.addEventListener('unhandledrejection', (e) => window.__sidecarErrors.push
   // code spans and lists all showed up as literal asterisks and backticks.
   // Everything is HTML-escaped first, then a small subset is re-introduced —
   // no raw HTML from the transcript ever reaches the DOM.
+  // [text](url) was never handled at all — it rendered as literal brackets and
+  // a raw URL. Links open in the system browser, never inside the app: this
+  // pane shows other people's model output, and letting it navigate in-place
+  // would let a transcript silently redirect the whole window.
   function mdInline(escaped) {
     return escaped
       .replace(/`([^`\n]+)`/g, '<code>$1</code>')
+      .replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g, (m, text, url) =>
+        `<a href="#" class="md-link" data-href="${url}">${text}</a>`)
+      .replace(/(^|[\s(])(https?:\/\/[^\s<]+)/g, (m, pre, url) =>
+        `${pre}<a href="#" class="md-link" data-href="${url}">${url}</a>`)
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
       .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,!?;:]|$)/g, '$1<em>$2</em>')
       .replace(/(^|[\s(])_([^_\n]+)_(?=[\s).,!?;:]|$)/g, '$1<em>$2</em>');
@@ -394,8 +402,20 @@ window.addEventListener('unhandledrejection', (e) => window.__sidecarErrors.push
     const s = findSession(state.sendTargetId);
     foot.style.display = '';
     input.placeholder = `Message ${s ? s.title : '…'}${s && s.status === 'running' ? ' — will queue' : ''}`;
+
+    // Sidecar can bring the right window forward but not pick which session
+    // tab is active inside it — if this window has other sessions, warn
+    // before a send can land in the wrong one.
+    const shareBox = $('#tx-sharewarn');
+    if (s && s.sharesWindowWith > 0) {
+      shareBox.style.display = '';
+      shareBox.textContent = `⚠ This window has ${s.sharesWindowWith} other session${s.sharesWindowWith === 1 ? '' : 's'} open too — make sure “${s.title}” is the active tab in Antigravity before sending.`;
+    } else {
+      shareBox.style.display = 'none';
+    }
+
     $('#tx-popout').onclick = () => {
-      window.sidecar.openComposerFor({ id: state.sendTargetId, title: s ? s.title : '', hue: s ? s.hue : 'violet' });
+      window.sidecar.openComposerFor({ id: state.sendTargetId, title: s ? s.title : '', hue: s ? s.hue : 'violet', sharesWindowWith: s ? s.sharesWindowWith : 0 });
     };
   }
 
@@ -476,6 +496,7 @@ window.addEventListener('unhandledrejection', (e) => window.__sidecarErrors.push
     // so nothing typed is ever lost.
     const sentImages = inlineImages;
     input.value = '';
+    autoGrowTxInput();
     inlineImages = [];
     renderInlineShots();
     input.disabled = true;
@@ -502,6 +523,7 @@ window.addEventListener('unhandledrejection', (e) => window.__sidecarErrors.push
 
     if (!r || !r.ok) {
       input.value = text;            // put the message back, nothing is lost
+      autoGrowTxInput();
       inlineImages = sentImages;
       renderInlineShots();
       if (r && r.error === 'needs-setup') {
@@ -515,9 +537,19 @@ window.addEventListener('unhandledrejection', (e) => window.__sidecarErrors.push
     input.focus();
     setTimeout(refresh, 500);
   }
+  // Grows with content instead of scrolling sideways as a single line.
+  function autoGrowTxInput() {
+    const el = $('#tx-input');
+    el.style.height = 'auto';
+    el.style.height = Math.min(140, el.scrollHeight) + 'px';
+  }
+  $('#tx-input').addEventListener('input', autoGrowTxInput);
+
   $('#tx-sendbtn').addEventListener('click', sendInline);
   $('#tx-input').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); sendInline(); }
+    // Shift+Enter (or Ctrl+Enter) inserts a real newline; plain Enter sends —
+    // same convention as the pop-up prompt box.
+    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) { e.preventDefault(); sendInline(); }
   });
 
   // ── edits / diff review ───────────────────────────────────────────────
@@ -1039,6 +1071,16 @@ window.addEventListener('unhandledrejection', (e) => window.__sidecarErrors.push
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
     if (window.sidecar.signalReady) window.sidecar.signalReady();
   })();
+
+  // Delegated once, since the transcript body is rebuilt wholesale on every
+  // update — a listener attached to individual links would be gone the next
+  // time renderTranscript() runs.
+  $('#tx-body').addEventListener('click', (e) => {
+    const a = e.target.closest('.md-link');
+    if (!a) return;
+    e.preventDefault();
+    window.sidecar.openExternal(a.dataset.href);
+  });
 
   window.sidecar.onSessionsChanged(refresh);
   window.sidecar.onSettingsChanged(applySettings);

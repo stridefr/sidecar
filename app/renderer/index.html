@@ -76,13 +76,14 @@
       <div class="shots" id="tx-shots" style="display:none"></div>
       <div class="mini">
         <span class="g"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8h10M8.5 4.5 12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-        <input type="text" id="tx-input" placeholder="Message —">
+        <textarea id="tx-input" rows="1" placeholder="Message —"></textarea>
         <button class="winbtn micbtn" id="tx-mic" title="Dictate">
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="5.5" y="2" width="5" height="8" rx="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
         </button>
         <button class="winbtn" id="tx-popout" title="Open the full prompt box">⤢</button>
         <button id="tx-sendbtn" title="Send (Enter)"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8h10M8.5 4.5 12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
+      <div class="sharewarn" id="tx-sharewarn" style="display:none"></div>
       <div class="err" id="tx-err" style="display:none"></div>
     </div>
   </section>

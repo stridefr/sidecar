@@ -91,15 +91,6 @@ function createComposerWindow() {
   }
 }
 
-let composerReadyHeight = null;
-function showComposer() {
-  // Apply the known content height with no animation *before* revealing, so
-  // opening the box doesn't play a resize the user reads as a stutter.
-  if (composerReadyHeight) setComposerHeight(composerReadyHeight, false);
-  composerWindow.show();
-  composerWindow.focus();
-}
-
 function toggleComposer() {
   if (!composerWindow || composerWindow.isDestroyed()) createComposerWindow();
   if (composerWindow.isVisible()) { composerWindow.hide(); return; }
@@ -269,6 +260,11 @@ function registerIpc() {
   ipcMain.handle('main:hide', () => { mainWindow && mainWindow.hide(); });
   ipcMain.handle('main:minimize', () => { mainWindow && mainWindow.minimize(); });
   ipcMain.handle('shell:openPath', (e, p) => shell.showItemInFolder(p));
+  // http(s) only — a transcript is other people's model output, not a place
+  // a file:// or javascript: link should ever be able to fire from.
+  ipcMain.handle('shell:openExternal', (e, url) => {
+    if (typeof url === 'string' && /^https?:\/\//i.test(url)) shell.openExternal(url);
+  });
 }
 
 // Only one Sidecar should ever hold the global hotkeys and the userData
@@ -309,6 +305,7 @@ if (!gotLock) {
 
     registerIpc();
     startWatcher();
+
 
     updater.init({
       onState: (st) => {

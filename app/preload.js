@@ -55,11 +55,13 @@ contextBridge.exposeInMainWorld('sidecar', {
   resizeComposer: (h) => ipcRenderer.invoke('composer:resize', h),
   openComposerFor: (payload) => ipcRenderer.invoke('composer:openFor', {
     id: str((payload || {}).id), title: str((payload || {}).title), hue: str((payload || {}).hue),
+    sharesWindowWith: Number((payload || {}).sharesWindowWith) || 0,
   }),
   openComposer: () => ipcRenderer.invoke('composer:toggle'),
   hideMain: () => ipcRenderer.invoke('main:hide'),
   minimizeMain: () => ipcRenderer.invoke('main:minimize'),
   openPath: (p) => ipcRenderer.invoke('shell:openPath', p),
+  openExternal: (url) => ipcRenderer.invoke('shell:openExternal', str(url)),
 
   onSessionsChanged: (cb) => ipcRenderer.on('sessions:changed', cb),
   onComposerReset: (cb) => ipcRenderer.on('composer:reset', cb),

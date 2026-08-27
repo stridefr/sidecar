@@ -104,10 +104,28 @@ if ($wasMinimised) { [SidecarSend]::ShowWindow($target, 9) | Out-Null }
 [SidecarSend]::SetForegroundWindow($target) | Out-Null
 Start-Sleep -Milliseconds 260
 
+# SetForegroundWindow doesn't guarantee the window STAYS foreground — a
+# notification, an alt-tab, even another app's own activation in that window
+# can steal it back before the paste fires. If that happens silently, the
+# text goes wherever focus actually ended up: the wrong session, or worse,
+# some unrelated window. So this is checked before anything is typed, with
+# one retry, and the whole send aborts rather than guessing.
+$confirmed = $false
+for ($i = 0; $i -lt 2; $i++) {
+  if ([SidecarSend]::GetForegroundWindow() -eq $target) { $confirmed = $true; break }
+  [SidecarSend]::SetForegroundWindow($target) | Out-Null
+  Start-Sleep -Milliseconds 200
+}
+if (-not $confirmed) { Write-Output "focus-lost"; exit }
+
 if ($FocusChord.Length -gt 0) {
   [System.Windows.Forms.SendKeys]::SendWait($FocusChord)
   Start-Sleep -Milliseconds 280
 }
+
+# Re-check once more right before anything gets pasted — the gap since the
+# first check (focus chord + its sleep) is another window for focus to move.
+if ([SidecarSend]::GetForegroundWindow() -ne $target) { Write-Output "focus-lost"; exit }
 
 foreach ($img in $ImageFiles) {
   if (Test-Path $img) {
@@ -200,6 +218,7 @@ async function sendToSession({ pid, workspacePath, text, images, submit, restore
 
     if (!r.ok) return r;
     if (r.out === 'not-found') return { ok: false, error: 'Could not find that Antigravity window. It may have been closed.' };
+    if (r.out === 'focus-lost') return { ok: false, error: 'Something else took focus while sending — stopped before anything was typed, so nothing was sent to the wrong place. Try again.' };
     return { ok: true };
   } finally {
     for (const dir of temps) { try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) {} }
@@ -228,6 +247,7 @@ async function sendChordToSession({ pid, workspacePath, chord, restoreFocus = tr
   }));
   if (!r.ok) return r;
   if (r.out === 'not-found') return { ok: false, error: 'Could not find that Antigravity window. It may have been closed.' };
+  if (r.out === 'focus-lost') return { ok: false, error: 'Something else took focus before the shortcut fired. Try again.' };
   return { ok: true };
 }
 

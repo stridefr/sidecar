@@ -108,6 +108,24 @@ class Controller {
     for (const w of windows.values()) w.sessions.sort((a, b) => b.mtimeMs - a.mtimeMs);
     pinned.sort((a, b) => b.mtimeMs - a.mtimeMs);
 
+    // A window can host many sessions, but Sidecar can only bring the *window*
+    // forward and focus *whatever Claude conversation is currently active
+    // inside it* — there's no command to select a specific session tab. If
+    // more than one session shares a window, sending to any of them but the
+    // one Antigravity actually has open delivers into the wrong conversation
+    // silently. Flagging it here so the UI can warn before that happens,
+    // rather than after.
+    for (const w of windows.values()) {
+      const shared = w.sessions.length > 1;
+      for (const s of w.sessions) s.sharesWindowWith = shared ? w.sessions.length - 1 : 0;
+    }
+    for (const s of pinned) {
+      if (s.windowLive) {
+        const w = [...windows.values()].find((w2) => w2.sessions.some((x) => x.id === s.id));
+        if (w) s.sharesWindowWith = w.sessions.length - 1;
+      }
+    }
+
     const windowList = [...windows.values()].sort((a, b) => {
       const am = Math.max(...a.sessions.map((s) => s.mtimeMs));
       const bm = Math.max(...b.sessions.map((s) => s.mtimeMs));
